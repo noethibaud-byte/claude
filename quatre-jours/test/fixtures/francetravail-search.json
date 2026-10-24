@@ -1,0 +1,25 @@
+{
+  "resultats": [
+    {
+      "id": "180ABCD",
+      "intitule": "Assistant administratif (H/F)",
+      "description": "Au sein d'une PME de 20 personnes, vous gérez l'accueil et la facturation.\nNous fonctionnons en semaine de 4 jours depuis 2024, vendredi libre.",
+      "dateCreation": "2026-10-20T08:12:00.000Z",
+      "lieuTravail": { "libelle": "69 - LYON 03", "codePostal": "69003", "commune": "69383" },
+      "entreprise": { "nom": "EXEMPLE SERVICES" },
+      "typeContrat": "CDI",
+      "salaire": { "libelle": "Mensuel de 2000.0 Euros à 2200.0 Euros sur 13 mois" },
+      "dureeTravailLibelle": "35H Horaires normaux",
+      "origineOffre": { "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/180ABCD" }
+    },
+    {
+      "id": "180EFGH",
+      "intitule": "Commercial terrain (H/F)",
+      "description": "Télétravail 4 jours par semaine, déplacements en région.",
+      "dateCreation": "2026-10-21T08:12:00.000Z",
+      "lieuTravail": { "libelle": "33 - BORDEAUX", "codePostal": "33000" },
+      "entreprise": { "nom": "EXEMPLE VENTE" },
+      "typeContrat": "CDI"
+    }
+  ]
+}
