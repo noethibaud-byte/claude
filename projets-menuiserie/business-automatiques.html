@@ -1,0 +1,556 @@
+<title>Business en pilote automatique</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : un registre comptable. Colonne de lecture, idées en fiches, démo fonctionnelle mise en avant comme pièce maîtresse. */
+:root {
+  --bg: #f2f4f1;
+  --sheet: #fbfcfa;
+  --ink: #12302a;
+  --soft: #536a63;
+  --rule: #cdd7d2;
+  --accent: #b08a12;
+  --accent-soft: #f3ead0;
+  --green: #1f6b52;
+  --red: #a53d33;
+  --display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --body: "Public Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1715; --sheet: #16211e; --ink: #e2ebe7; --soft: #9fb2ab; --rule: #2d3d38;
+    --accent: #e3be4f; --accent-soft: #352d13; --green: #6cc5a1; --red: #ec8277;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1715; --sheet: #16211e; --ink: #e2ebe7; --soft: #9fb2ab; --rule: #2d3d38;
+  --accent: #e3be4f; --accent-soft: #352d13; --green: #6cc5a1; --red: #ec8277;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 52px; }
+h1, h2, h3, h4 { font-family: var(--display); line-height: 1.08; margin: 0; text-wrap: balance; font-weight: 700; letter-spacing: -.015em; }
+h1 { font-size: clamp(2.2rem, 5.6vw, 3.6rem); }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.3rem); }
+h3 { font-size: 1.25rem; font-weight: 600; }
+p { margin: 0; }
+.prose { max-width: 68ch; }
+.label { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--soft); }
+.soft { color: var(--soft); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section { display: grid; gap: 20px; }
+
+header.top { display: grid; gap: 18px; }
+.lede { font-size: 1.12rem; color: var(--soft); max-width: 64ch; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.rules div { background: var(--sheet); padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.rules b { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+.rules p { font-size: .92rem; color: var(--soft); }
+
+/* Tableau */
+.table-box { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: .92rem; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-weight: 500; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: var(--soft); }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.pick td { background: var(--accent-soft); }
+.chip { display: inline-block; font-family: var(--mono); font-size: .7rem; padding: 2px 8px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.g { color: var(--green); } .chip.y { color: var(--accent); } .chip.r { color: var(--red); }
+
+/* Idée */
+.idea-head { display: grid; gap: 8px; }
+.tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: .7rem; padding: 3px 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--soft); }
+.tag.rec { border-color: var(--accent); color: var(--accent); }
+.numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.numbers div { background: var(--sheet); padding: 14px 16px; display: grid; gap: 3px; align-content: start; min-width: 0; }
+.numbers b { font-family: var(--display); font-size: 1.45rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.numbers p { font-size: .9rem; color: var(--soft); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.two > div { min-width: 0; display: grid; gap: 8px; align-content: start; }
+ul.l { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+ul.plus li::marker { content: "+  "; color: var(--green); font-family: var(--mono); }
+ul.minus li::marker { content: "−  "; color: var(--red); font-family: var(--mono); }
+.math { font-family: var(--mono); font-size: .85rem; background: var(--sheet); border: 1px dashed var(--rule); padding: 12px 14px; overflow-x: auto; white-space: pre; line-height: 1.7; }
+.divider { height: 1px; background: var(--rule); }
+
+/* Navigateur */
+.browser { border: 1px solid var(--rule); background: var(--sheet); box-shadow: 0 18px 40px -26px rgba(10, 30, 25, .5); overflow: hidden; }
+.bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--rule); background: var(--bg); }
+.bar .d { display: flex; gap: 6px; } .bar .d b { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); display: block; }
+.bar .u { flex: 1; min-width: 0; font-family: var(--mono); font-size: .74rem; color: var(--soft); background: var(--sheet); border: 1px solid var(--rule); padding: 4px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cap { font-size: .85rem; color: var(--soft); }
+
+/* ---------- Démo Quittance ---------- */
+.mQ { --q-bg: #ffffff; --q-ink: #1b2440; --q-soft: #5f6884; --q-acc: #3346c9; --q-tint: #eef0fc; --q-line: #dde1ee;
+  background: var(--q-bg); color: var(--q-ink); font-size: 15px; }
+.mQ nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--q-line); gap: 8px; flex-wrap: wrap; }
+.mQ .logo { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: -.02em; }
+.mQ .logo span { color: var(--q-acc); }
+.mQ nav .pro { font-size: .85rem; color: var(--q-acc); font-weight: 600; }
+.mQ .app { display: grid; grid-template-columns: 340px 1fr; }
+.mQ form { padding: 20px 22px; border-right: 1px solid var(--q-line); display: grid; gap: 12px; align-content: start; background: var(--q-tint); }
+.mQ fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.mQ legend { font-family: var(--mono); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: var(--q-soft); margin-bottom: 4px; }
+.mQ label { display: grid; gap: 3px; font-size: .8rem; color: var(--q-soft); }
+.mQ input { font: inherit; font-size: .9rem; color: var(--q-ink); background: var(--q-bg); border: 1px solid var(--q-line); padding: 7px 9px; width: 100%; min-width: 0; color-scheme: light; }
+.mQ input:focus { outline: 2px solid var(--q-acc); outline-offset: 0; border-color: var(--q-acc); }
+.mQ .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mQ .doc-wrap { padding: 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.mQ .doc { border: 1px solid var(--q-line); padding: 26px 28px; display: grid; gap: 14px; font-size: .92rem; line-height: 1.55; box-shadow: 0 10px 26px -20px rgba(27, 36, 64, .6); }
+.mQ .doc h4 { font-size: 1.35rem; text-align: center; letter-spacing: .04em; text-transform: uppercase; font-weight: 700; }
+.mQ .doc .per { text-align: center; color: var(--q-soft); font-size: .88rem; margin-top: -8px; }
+.mQ .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: .85rem; }
+.mQ .parties small { display: block; font-family: var(--mono); font-size: .66rem; letter-spacing: .07em; text-transform: uppercase; color: var(--q-soft); }
+.mQ .amounts { border-top: 1px solid var(--q-line); border-bottom: 1px solid var(--q-line); }
+.mQ .amounts div { display: flex; justify-content: space-between; padding: 6px 0; font-variant-numeric: tabular-nums; gap: 12px; }
+.mQ .amounts .tot { font-weight: 700; border-top: 1px solid var(--q-line); }
+.mQ .sign { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--q-soft); }
+.mQ .legal { font-size: .72rem; color: var(--q-soft); }
+.mQ .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.mQ .btn { font: inherit; font-size: .88rem; font-weight: 600; border: 0; background: var(--q-acc); color: #fff; padding: 9px 14px; cursor: pointer; }
+.mQ .btn.ghost { background: transparent; color: var(--q-acc); border: 1px solid var(--q-acc); }
+.mQ .toast { font-size: .82rem; color: var(--q-soft); }
+.mQ .upsell { border: 1px solid var(--q-acc); padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; font-size: .86rem; }
+.mQ .upsell b.p { font-family: var(--display); font-size: 1.4rem; color: var(--q-acc); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mQ .irl { border-top: 1px solid var(--q-line); padding: 18px 22px 22px; display: grid; gap: 10px; }
+.mQ .irl .grid { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 8px; align-items: end; }
+.mQ .irl output { font-family: var(--display); font-size: 1.3rem; font-weight: 700; color: var(--q-acc); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mQ .irl p { font-size: .78rem; color: var(--q-soft); }
+
+/* ---------- Maquette Voiture ---------- */
+.mV { --v-bg: #101418; --v-panel: #192027; --v-ink: #eef2f5; --v-soft: #93a1ad; --v-ev: #4fd1a5; --v-th: #ff9f5a; --v-line: #2a333c;
+  background: var(--v-bg); color: var(--v-ink); font-size: 15px; }
+.mV nav { padding: 14px 22px; border-bottom: 1px solid var(--v-line); font-family: var(--display); font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mV nav span { font-family: var(--body); font-weight: 400; font-size: .82rem; color: var(--v-soft); }
+.mV .body { display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; padding: 22px; }
+.mV h4 { font-size: clamp(1.4rem, 3vw, 1.9rem); margin-bottom: 12px; }
+.mV .in { display: grid; gap: 8px; }
+.mV .in div { display: flex; justify-content: space-between; background: var(--v-panel); padding: 9px 12px; font-size: .88rem; gap: 8px; }
+.mV .in b { font-variant-numeric: tabular-nums; }
+.mV .bars { display: grid; gap: 14px; align-content: start; }
+.mV .bar-row { display: grid; gap: 5px; }
+.mV .bar-row .t { display: flex; justify-content: space-between; font-size: .88rem; gap: 8px; }
+.mV .bar-row .t b { font-variant-numeric: tabular-nums; }
+.mV .track { height: 14px; background: var(--v-panel); }
+.mV .fill { height: 100%; }
+.mV .verdict { background: var(--v-panel); padding: 12px 14px; font-size: .9rem; border-left: 3px solid var(--v-ev); }
+.mV .aff { font-size: .8rem; color: var(--v-soft); }
+
+/* ---------- Maquette Templates ---------- */
+.mT { --t-bg: #fbf7f2; --t-ink: #2d2320; --t-soft: #7a6a63; --t-acc: #c0476a; --t-card: #ffffff; --t-line: #ece2d9;
+  background: var(--t-bg); color: var(--t-ink); font-size: 15px; }
+.mT nav { padding: 14px 22px; border-bottom: 1px solid var(--t-line); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mT nav b { font-family: var(--display); font-size: 1.1rem; }
+.mT nav span { font-size: .82rem; color: var(--t-soft); }
+.mT .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 20px 22px 24px; }
+.mT .card { background: var(--t-card); border: 1px solid var(--t-line); display: grid; gap: 4px; padding: 10px; font-size: .85rem; }
+.mT .sheet { aspect-ratio: 4 / 3; max-width: 100%; border: 1px solid var(--t-line); background:
+  linear-gradient(var(--t-line) 1px, transparent 1px) 0 0 / 100% 14px,
+  linear-gradient(90deg, var(--t-line) 1px, transparent 1px) 0 0 / 28% 100%; position: relative; }
+.mT .sheet i { position: absolute; left: 8%; bottom: 10%; width: 12%; background: var(--t-acc); opacity: .8; }
+.mT .sheet i:nth-child(2) { left: 26%; } .mT .sheet i:nth-child(3) { left: 44%; } .mT .sheet i:nth-child(4) { left: 62%; }
+.mT .card b { font-size: .9rem; }
+.mT .card .p { display: flex; justify-content: space-between; color: var(--t-soft); }
+.mT .card .p strong { color: var(--t-acc); font-variant-numeric: tabular-nums; }
+
+/* ---------- Maquette Job board ---------- */
+.mJ { --j-bg: #fffdf6; --j-ink: #1e1b16; --j-soft: #6e665a; --j-acc: #2b7a3d; --j-line: #e8e1d0; --j-tint: #eef6ea;
+  background: var(--j-bg); color: var(--j-ink); font-size: 15px; }
+.mJ nav { padding: 14px 22px; border-bottom: 1px solid var(--j-line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mJ nav b { font-family: var(--display); font-size: 1.2rem; }
+.mJ nav b span { color: var(--j-acc); }
+.mJ .post { background: var(--j-acc); color: #fff; font-size: .82rem; font-weight: 600; padding: 7px 12px; }
+.mJ .hero { padding: 20px 22px 8px; display: grid; gap: 6px; }
+.mJ .hero h4 { font-size: clamp(1.3rem, 3vw, 1.8rem); }
+.mJ .list { padding: 10px 22px 22px; display: grid; gap: 8px; }
+.mJ .job { border: 1px solid var(--j-line); padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; }
+.mJ .job.sp { background: var(--j-tint); border-color: var(--j-acc); }
+.mJ .job .meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: .76rem; color: var(--j-soft); }
+.mJ .job .meta span { border: 1px solid var(--j-line); padding: 1px 7px; background: var(--j-bg); }
+.mJ .job .s { font-family: var(--mono); font-size: .7rem; color: var(--j-acc); }
+.mJ .job .sal { font-variant-numeric: tabular-nums; font-size: .88rem; white-space: nowrap; }
+
+/* Plan */
+.plan { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.step { background: var(--sheet); display: grid; grid-template-columns: 140px 1fr 1fr; gap: 18px; padding: 14px 18px; font-size: .93rem; }
+.step.h { font-family: var(--mono); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: var(--soft); padding-block: 10px; }
+.step .w { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+.step > div { min-width: 0; }
+.no { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.no div { background: var(--sheet); padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.no b { color: var(--red); font-weight: 600; }
+.no p { font-size: .9rem; color: var(--soft); }
+
+@media (max-width: 820px) {
+  .mQ .app { grid-template-columns: 1fr; }
+  .mQ form { border-right: 0; border-bottom: 1px solid var(--q-line); }
+  .mQ .irl .grid { grid-template-columns: 1fr 1fr; }
+  .mV .body, .two { grid-template-columns: 1fr; }
+  .mT .grid { grid-template-columns: 1fr 1fr; }
+  .step { grid-template-columns: 1fr; gap: 4px; }
+  .step.h { display: none; }
+}
+@media (max-width: 480px) {
+  .mQ .doc { padding: 18px 16px; }
+  .mQ .parties, .mQ .upsell { grid-template-columns: 1fr; }
+  .mT .grid { grid-template-columns: 1fr; }
+  .mJ .job { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="label">Dossier · Business à faible entretien · France</p>
+    <h1>Quatre business qui tournent presque sans toi</h1>
+    <p class="lede">Ce sont des idées que je pourrais réellement t'aider à construire, sans lien avec la menuiserie. Toutes respectent les mêmes règles : la livraison est automatique et tu ne fais rien sur mesure pour les clients. Une fois lancées, elles demandent 1 à 4 heures par semaine. La première est déjà une démo qui fonctionne : tu peux la tester plus bas.</p>
+    <div class="rules">
+      <div><b>Livraison automatique</b><p>Le client paie, le produit arrive tout seul. Pas de colis, pas de rendez-vous.</p></div>
+      <div><b>Un besoin qui revient</b><p>Les gens cherchent la même chose chaque mois ou chaque année, ce qui donne une demande stable.</p></div>
+      <div><b>Un outil plutôt que des articles</b><p>Les réponses IA de Google remplacent les articles, pas les outils : on a toujours besoin de faire son calcul ou de générer son document.</p></div>
+      <div><b>Rien sur mesure</b><p>Pas de prestation ni de vente de ton temps : 100 clients demandent le même effort que 10.</p></div>
+    </div>
+  </header>
+
+  <section aria-labelledby="cmp">
+    <p class="label">Vue d'ensemble</p>
+    <h2 id="cmp">Les quatre idées comparées</h2>
+    <div class="table-box">
+      <table>
+        <thead><tr><th>Idée</th><th>Modèle</th><th>Lancement</th><th>Ensuite</th><th>Potentiel à 18 mois*</th><th>Niveau de risque</th></tr></thead>
+        <tbody>
+          <tr class="pick"><td><b>1 · Quittance Nette</b><br><span class="soft">Quittances de loyer automatiques</span></td><td>Abonnement 2,90 €/mois par logement</td><td class="n">8–10 semaines</td><td class="n">2–3 h/sem.</td><td class="n">600–2 500 €/mois</td><td><span class="chip g">Modéré</span></td></tr>
+          <tr><td><b>2 · Combien Coûte Ma Voiture</b><br><span class="soft">Simulateur électrique ou thermique</span></td><td>Affiliation (leasing, assurance, bornes)</td><td class="n">4–6 semaines</td><td class="n">1–2 h/sem.</td><td class="n">200–1 500 €/mois</td><td><span class="chip y">Dépend de Google</span></td></tr>
+          <tr><td><b>3 · Tableurs de niche</b><br><span class="soft">Modèles Google Sheets prêts à l'emploi</span></td><td>Vente unique 9–29 € (Etsy, Gumroad)</td><td class="n">3–4 semaines</td><td class="n">1–2 h/sem.</td><td class="n">200–1 200 €/mois</td><td><span class="chip y">Marché concurrentiel</span></td></tr>
+          <tr><td><b>4 · Quatre Jours</b><br><span class="soft">Offres d'emploi en semaine de 4 jours</span></td><td>Annonces payantes 99 €, sponsors</td><td class="n">5–7 semaines</td><td class="n">3–4 h/sem.</td><td class="n">300–3 000 €/mois</td><td><span class="chip r">Difficile au départ</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">* Ordres de grandeur que j'ai estimés, pas des données vérifiées. Beaucoup de projets n'atteignent jamais ces fourchettes. Ce qui fait la différence, c'est de régler le problème du trafic : ça demande de la régularité les 6 premiers mois.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================= IDÉE 1 ================= -->
+  <section aria-labelledby="i1">
+    <div class="idea-head">
+      <div class="tags"><span class="tag rec">Ma recommandation</span><span class="tag">Abonnement récurrent</span><span class="tag">Propriétaires bailleurs</span></div>
+      <h2 id="i1">1 · Quittance Nette : les quittances de loyer qui partent toutes seules</h2>
+      <p class="prose">En France, des millions de particuliers louent un ou deux logements. Chaque mois, beaucoup refont leur quittance à la main dans Word, et une fois par an ils oublient de réviser le loyer avec l'indice IRL, donc ils perdent de l'argent. L'outil est gratuit pour générer une quittance, ce qui attire du monde depuis Google. Puis il propose un abonnement pour l'automatiser : <b>envoi automatique au locataire chaque mois, archivage, rappel et calcul de la révision annuelle</b>.</p>
+    </div>
+
+    <div class="browser">
+      <div class="bar"><div class="d"><b></b><b></b><b></b></div><div class="u">quittance-nette.fr</div></div>
+      <div class="mQ">
+        <nav><span class="logo">Quittance<span>Nette</span></span><span class="pro">Automatiser l'envoi →</span></nav>
+        <div class="app">
+          <form id="qf" autocomplete="off">
+            <fieldset>
+              <legend>Bailleur</legend>
+              <label for="q-bn">Nom<input id="q-bn" value="Marie Lefèvre"></label>
+              <label for="q-ba">Adresse<input id="q-ba" value="12 rue des Tilleuls, 44000 Nantes"></label>
+            </fieldset>
+            <fieldset>
+              <legend>Locataire et logement</legend>
+              <label for="q-ln">Nom du locataire<input id="q-ln" value="Thomas Garnier"></label>
+              <label for="q-la">Adresse du logement<input id="q-la" value="3 place du Commerce, apt 21, 44000 Nantes"></label>
+            </fieldset>
+            <fieldset>
+              <legend>Paiement</legend>
+              <div class="row2">
+                <label for="q-loyer">Loyer hors charges (€)<input id="q-loyer" type="number" min="0" step="0.01" value="645"></label>
+                <label for="q-ch">Charges (€)<input id="q-ch" type="number" min="0" step="0.01" value="55.50"></label>
+              </div>
+              <div class="row2">
+                <label for="q-mois">Mois concerné<input id="q-mois" type="month" value="2026-10"></label>
+                <label for="q-date">Payé le<input id="q-date" type="date" value="2026-10-03"></label>
+              </div>
+            </fieldset>
+          </form>
+          <div class="doc-wrap">
+            <article class="doc" id="qdoc" aria-live="polite">
+              <h4>Quittance de loyer</h4>
+              <p class="per" id="d-per"></p>
+              <div class="parties">
+                <div><small>Bailleur</small><span id="d-bn"></span><br><span id="d-ba"></span></div>
+                <div><small>Locataire</small><span id="d-ln"></span><br><span id="d-la"></span></div>
+              </div>
+              <p id="d-txt"></p>
+              <div class="amounts">
+                <div><span>Loyer hors charges</span><span id="d-loyer"></span></div>
+                <div><span>Provision pour charges</span><span id="d-ch"></span></div>
+                <div class="tot"><span>Total reçu</span><span id="d-tot"></span></div>
+              </div>
+              <div class="sign"><span id="d-fait"></span><span>Signature du bailleur</span></div>
+              <p class="legal">Quittance délivrée gratuitement, conformément à l'article 21 de la loi n° 89-462 du 6 juillet 1989, avec le loyer et les charges indiqués séparément. Le paiement de cette période n'éteint pas les sommes antérieures éventuellement dues.</p>
+            </article>
+            <div class="actions">
+              <button class="btn" type="button" id="q-copy">Copier le texte</button>
+              <button class="btn ghost" type="button" id="q-next">Mois suivant</button>
+              <span class="toast" id="q-toast" role="status"></span>
+            </div>
+            <div class="upsell">
+              <div><b>Ne refaites plus jamais cette quittance.</b><br>Envoi automatique au locataire le 5 de chaque mois, archives PDF, alerte et calcul de la révision IRL.</div>
+              <div><b class="p">2,90 €</b><br><span style="font-size:.78rem">par logement / mois</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="irl">
+          <b>Révision annuelle du loyer (IRL)</b>
+          <div class="grid">
+            <label for="i-loyer">Loyer actuel (€)<input id="i-loyer" type="number" step="0.01" value="645"></label>
+            <label for="i-old">IRL de référence du bail<input id="i-old" type="number" step="0.01" value="140.59"></label>
+            <label for="i-new">IRL du même trimestre, un an après<input id="i-new" type="number" step="0.01" value="145.17"></label>
+            <div><span style="font-size:.8rem;color:var(--q-soft)">Nouveau loyer</span><br><output id="i-out" for="i-loyer i-old i-new"></output></div>
+          </div>
+          <p id="i-txt"></p>
+          <p>Les indices pré-remplis sont des valeurs d'exemple. Dans la version réelle, les indices officiels publiés chaque trimestre par l'Insee seront récupérés automatiquement.</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Démo fonctionnelle : modifie les champs, la quittance et le montant en toutes lettres se mettent à jour. Les noms et adresses sont fictifs.</p>
+
+    <div class="numbers">
+      <div><span class="label">Prix</span><b>2,90 €/mois</b><p>par logement, ou 29 € par an. La quittance unique reste gratuite pour attirer du trafic.</p></div>
+      <div><span class="label">Coûts fixes</span><b>≈ 30 €/mois</b><p>hébergement, envoi d'emails, nom de domaine. Frais Stripe d'environ 1,5 % + 0,25 € par paiement.</p></div>
+      <div><span class="label">Trafic</span><b>Google</b><p>Les recherches du type « modèle quittance de loyer » reviennent tous les mois, toute l'année.</p></div>
+      <div><span class="label">Ton temps ensuite</span><b>2–3 h/sem.</b><p>répondre aux emails, publier une page utile par mois, mettre à jour les indices.</p></div>
+    </div>
+    <div class="math">Hypothèse de calcul à 18 mois
+  400 logements abonnés × 2,90 €          = 1 160 €/mois
+− frais de paiement (≈ 12 %, petits montants) ≈   140 €
+− hébergement et emails                  ≈    30 €
+= environ 990 € net par mois, avant cotisations sociales (micro-entreprise)</div>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="l plus"><li>Le besoin revient tous les mois et l'obligation est légale : le bailleur doit remettre une quittance si le locataire la demande.</li><li>Une fois abonnés, les gens restent : changer d'outil pour 2,90 € n'en vaut pas la peine.</li><li>La révision IRL fait souvent gagner plus que le prix de l'abonnement, l'argument de vente est simple.</li><li>Le logiciel fait tout. Je peux le construire et t'aider à le faire évoluer.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="l minus"><li>Il y a déjà des concurrents (logiciels de gestion locative complets). Ton angle : ultra simple, pour 1 à 3 logements, sans rien configurer.</li><li>Les données personnelles des locataires imposent de respecter le RGPD (mentions, hébergement en Europe, suppression des données).</li><li>Les 3 à 6 premiers mois de référencement Google seront lents.</li><li>C'est un logiciel : il faut quelqu'un pour le maintenir. Je peux le faire avec toi, mais tu en dépendras.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================= IDÉE 2 ================= -->
+  <section aria-labelledby="i2">
+    <div class="idea-head">
+      <div class="tags"><span class="tag">Affiliation</span><span class="tag">Automobilistes</span></div>
+      <h2 id="i2">2 · Combien Coûte Ma Voiture : le vrai coût, électrique ou thermique</h2>
+      <p class="prose">Un simulateur qui calcule le coût réel d'une voiture sur 5 ans : achat ou location longue durée, énergie, entretien, assurance, revente. Le site se finance par des liens partenaires vers des offres de location longue durée, de comparateurs d'assurance et d'installateurs de bornes. Un simulateur coûte peu à faire tourner : seuls les prix de l'énergie et les aides se mettent à jour, quelques fois par an.</p>
+    </div>
+    <div class="browser">
+      <div class="bar"><div class="d"><b></b><b></b><b></b></div><div class="u">combiencoutemavoiture.fr</div></div>
+      <div class="mV">
+        <nav>Combien Coûte Ma Voiture<span>Simulateur sur 5 ans</span></nav>
+        <div class="body">
+          <div>
+            <h4>Électrique ou essence : qui coûte le moins sur 5 ans ?</h4>
+            <div class="in">
+              <div><span>Kilométrage annuel</span><b>15 000 km</b></div>
+              <div><span>Recharge à domicile</span><b>80 %</b></div>
+              <div><span>Financement</span><b>Location longue durée</b></div>
+              <div><span>Profil d'assurance</span><b>Bonus 0,68</b></div>
+            </div>
+          </div>
+          <div class="bars">
+            <div class="bar-row"><div class="t"><span>Électrique compacte</span><b>24 800 €</b></div><div class="track"><div class="fill" style="width:72%;background:var(--v-ev)"></div></div></div>
+            <div class="bar-row"><div class="t"><span>Essence équivalente</span><b>34 300 €</b></div><div class="track"><div class="fill" style="width:100%;background:var(--v-th)"></div></div></div>
+            <div class="verdict">Avec ce profil, l'électrique coûterait environ <b>9 500 € de moins</b> sur 5 ans, soit à peu près 158 € par mois.</div>
+            <p class="aff">Voir les offres de location longue durée · Comparer les assurances · Devis pour une borne de recharge</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Maquette, avec des montants d'exemple.</p>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="l plus"><li>Une question que des millions de gens se posent, avec une forte intention d'achat.</li><li>Un calcul personnalisé, que les réponses IA font mal.</li><li>Presque aucun entretien une fois le simulateur en ligne.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="l minus"><li>Tout le trafic vient de Google : une mise à jour peut le faire chuter.</li><li>Les commissions d'affiliation varient et les programmes peuvent fermer.</li><li>Le crédit et l'assurance sont réglementés : passer par des plateformes d'affiliation, ne pas faire soi-même d'intermédiation (immatriculation à l'ORIAS sinon).</li></ul></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================= IDÉE 3 ================= -->
+  <section aria-labelledby="i3">
+    <div class="idea-head">
+      <div class="tags"><span class="tag">Produits numériques</span><span class="tag">Etsy · Gumroad</span></div>
+      <h2 id="i3">3 · Tableurs de niche : des modèles Google Sheets qui calculent pour toi</h2>
+      <p class="prose">C'est l'idée la plus simple à lancer : des tableurs prêts à l'emploi sur des sujets précis, vendus sur Etsy, qui apporte les acheteurs. Je construis les formules, les graphiques et les automatisations. Toi, tu choisis les sujets et tu gères la boutique. Ce qui se vend, ce sont les niches précises et en français, pas les modèles génériques.</p>
+    </div>
+    <div class="browser">
+      <div class="bar"><div class="d"><b></b><b></b><b></b></div><div class="u">etsy.com/shop/…</div></div>
+      <div class="mT">
+        <nav><b>Tableurs Clairs</b><span>Modèles Google Sheets · livraison immédiate</span></nav>
+        <div class="grid">
+          <div class="card"><div class="sheet"><i style="height:40%"></i><i style="height:62%"></i><i style="height:30%"></i><i style="height:75%"></i></div><b>Budget de mariage</b><span class="soft">Prestataires, acomptes, invités</span><span class="p">4,9 ★<strong>14 €</strong></span></div>
+          <div class="card"><div class="sheet"><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%"></i><i style="height:60%"></i></div><b>Suivi location meublée</b><span class="soft">Recettes, amortissements, 2031</span><span class="p">4,8 ★<strong>24 €</strong></span></div>
+          <div class="card"><div class="sheet"><i style="height:30%"></i><i style="height:44%"></i><i style="height:52%"></i><i style="height:66%"></i></div><b>Trésorerie d'association</b><span class="soft">Cotisations, subventions, bilan</span><span class="p">5,0 ★<strong>19 €</strong></span></div>
+          <div class="card"><div class="sheet"><i style="height:68%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:42%"></i></div><b>Budget familial 50/30/20</b><span class="soft">Mois par mois, objectifs d'épargne</span><span class="p">4,7 ★<strong>9 €</strong></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Maquette. Les notes affichées sont fictives.</p>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="l plus"><li>Lancement rapide et presque sans frais (0,20 $ par annonce sur Etsy).</li><li>Une fois en ligne, il n'y a quasiment rien à faire.</li><li>C'est un bon moyen de tester ta capacité à vendre avant un projet plus lourd.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="l minus"><li>Marché concurrentiel, prix bas : il faut 15 à 30 modèles pour un revenu correct.</li><li>Tu dépends de l'algorithme d'Etsy et de ses commissions (environ 10 à 15 % au total).</li><li>Le plafond de revenus est plus bas que pour les autres idées.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================= IDÉE 4 ================= -->
+  <section aria-labelledby="i4">
+    <div class="idea-head">
+      <div class="tags"><span class="tag">Site d'emploi de niche</span><span class="tag">Employeurs payants</span></div>
+      <h2 id="i4">4 · Quatre Jours : les offres d'emploi en semaine de 4 jours</h2>
+      <p class="prose">La semaine de 4 jours attire beaucoup de candidats, mais aucun site ne permet de trouver facilement ces offres. Le site rassemble automatiquement les offres publiques qui mentionnent la semaine de 4 jours, et les entreprises paient pour mettre leur annonce en avant. Une newsletter hebdomadaire envoyée automatiquement entretient l'audience et se vend en sponsoring.</p>
+    </div>
+    <div class="browser">
+      <div class="bar"><div class="d"><b></b><b></b><b></b></div><div class="u">quatre-jours.fr</div></div>
+      <div class="mJ">
+        <nav><b>Quatre<span>Jours</span></b><span class="post">Publier une offre · 99 €</span></nav>
+        <div class="hero"><h4>Des emplois en semaine de 4 jours, partout en France</h4><span style="color:var(--j-soft);font-size:.88rem">Exemple : 312 offres actives · mises à jour chaque matin</span></div>
+        <div class="list">
+          <div class="job sp"><div><span class="s">Offre mise en avant</span><br><b>Développeuse ou développeur back-end</b><div class="meta"><span>Lyon</span><span>CDI</span><span>4 × 8,75 h</span><span>Télétravail partiel</span></div></div><span class="sal">48–55 k€</span></div>
+          <div class="job"><div><b>Chargé·e de clientèle</b><div class="meta"><span>Bordeaux</span><span>CDI</span><span>4 jours sur 5</span></div></div><span class="sal">28–31 k€</span></div>
+          <div class="job"><div><b>Technicien·ne de maintenance</b><div class="meta"><span>Rennes</span><span>CDI</span><span>4 × 9 h</span></div></div><span class="sal">30–34 k€</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Maquette. Offres et chiffres fictifs.</p>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="l plus"><li>Un sujet tendance, avec une audience motivée et facile à toucher sur LinkedIn.</li><li>Les entreprises paient volontiers : 99 € est bien moins cher qu'une annonce sur les grands sites d'emploi.</li><li>La collecte d'offres et la newsletter peuvent être entièrement automatisées.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="l minus"><li>Le problème de départ : sans candidats, pas d'employeurs, et inversement. Les 6 premiers mois sont les plus durs.</li><li>Il faut collecter les offres légalement (sources ouvertes, flux autorisés), sans copier les sites concurrents.</li><li>Ça demande un peu plus de suivi que les autres idées.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section aria-labelledby="no">
+    <p class="label">Ce que j'écarte</p>
+    <h2 id="no">Les idées « passives » que je te déconseille</h2>
+    <div class="no">
+      <div><b>Dropshipping</b><p>Publicité de plus en plus chère, concurrence de Temu et Shein, service client lourd. L'inverse d'un business qui tourne seul.</p></div>
+      <div><b>Chaînes YouTube ou TikTok 100 % IA</b><p>Les plateformes démonétisent le contenu répétitif produit en masse, et la concurrence est gigantesque.</p></div>
+      <div><b>Blogs remplis d'articles IA</b><p>Google les déclasse et les réponses IA captent les clics. Les revenus publicitaires s'effondrent.</p></div>
+      <div><b>Robots de trading, crypto</b><p>Ce n'est pas un business mais un risque sur ton capital, et le domaine est rempli d'arnaques.</p></div>
+      <div><b>T-shirts et mugs imprimés à la demande</b><p>Marges de quelques euros, marché saturé. Ça ne marche qu'avec une communauté déjà existante.</p></div>
+      <div><b>Revendre des formations « argent facile »</b><p>Mauvaise réputation, cadre légal plus strict depuis la loi influenceurs de 2023, clients déçus.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="plan">
+    <p class="label">Idée 1 · Qui fait quoi</p>
+    <h2 id="plan">Lancer Quittance Nette en 10 semaines</h2>
+    <div class="plan">
+      <div class="step h"><span>Période</span><span>Ce que je construis</span><span>Ce que tu fais (≈ 10 h/sem.)</span></div>
+      <div class="step"><span class="w">Semaines 1–2</span><div>Le générateur gratuit en ligne avec export PDF, à partir de la démo ci-dessus.</div><div>Créer ta micro-entreprise, réserver le nom de domaine, ouvrir un compte Stripe.</div></div>
+      <div class="step"><span class="w">Semaines 3–5</span><div>Comptes utilisateurs, abonnement Stripe, envoi automatique mensuel, archivage, calcul IRL.</div><div>Tester l'outil avec 5 bailleurs de ton entourage et noter tout ce qui bloque.</div></div>
+      <div class="step"><span class="w">Semaines 6–8</span><div>Pages utiles pour Google (modèles, guide de la révision IRL, quittance et APL), mentions RGPD, conditions de vente.</div><div>Relire les textes, publier dans les groupes de propriétaires bailleurs, recueillir les premiers avis.</div></div>
+      <div class="step"><span class="w">Semaines 9–10</span><div>Corrections d'après les retours, statistiques simples (inscriptions, abonnés, désabonnements).</div><div>Lancement public. Ensuite : 2 à 3 h par semaine.</div></div>
+    </div>
+    <p class="prose soft">Si tu veux tester ta capacité à vendre avant de t'engager dans un logiciel, commence par l'idée 3 en parallèle : un premier tableur peut être en vente sur Etsy en une semaine.</p>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var U = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];
+  var T = { 2: "vingt", 3: "trente", 4: "quarante", 5: "cinquante", 6: "soixante" };
+  function below100(n) {
+    if (n < 20) return U[n];
+    var t = Math.floor(n / 10), u = n % 10;
+    if (t === 7 || t === 9) {
+      var base = t === 7 ? "soixante" : "quatre-vingt";
+      if (t === 7 && u === 1) return "soixante et onze";
+      return base + "-" + U[10 + u];
+    }
+    if (t === 8) return u === 0 ? "quatre-vingts" : "quatre-vingt-" + U[u];
+    if (u === 0) return T[t];
+    if (u === 1) return T[t] + " et un";
+    return T[t] + "-" + U[u];
+  }
+  function below1000(n) {
+    var h = Math.floor(n / 100), r = n % 100, s = "";
+    if (h > 0) s = h === 1 ? "cent" : U[h] + " cent" + (r === 0 ? "s" : "");
+    if (r > 0) s = (s ? s + " " : "") + below100(r);
+    return s;
+  }
+  function words(n) {
+    if (n === 0) return "zéro";
+    var th = Math.floor(n / 1000), r = n % 1000, s = "";
+    if (th > 0) s = th === 1 ? "mille" : below1000(th).replace(/(cent|vingt)s$/, "$1") + " mille";
+    if (r > 0) s = (s ? s + " " : "") + below1000(r);
+    return s;
+  }
+  function inWords(amount) {
+    var cents = Math.round(amount * 100), e = Math.floor(cents / 100), c = cents % 100;
+    var s = words(e) + (e > 1 ? " euros" : " euro");
+    if (c > 0) s += " et " + words(c) + (c > 1 ? " centimes" : " centime");
+    return s;
+  }
+  var fmt = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+  var MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  function $(id) { return document.getElementById(id); }
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; }
+
+  function render() {
+    var loyer = num("q-loyer"), ch = num("q-ch"), tot = Math.round((loyer + ch) * 100) / 100;
+    var m = ($("q-mois").value || "2026-10").split("-"), y = +m[0], mo = +m[1] - 1;
+    var last = new Date(y, mo + 1, 0).getDate();
+    var per = "du 1er au " + last + " " + MONTHS[mo] + " " + y;
+    var bn = $("q-bn").value || "…", ln = $("q-ln").value || "…";
+    $("d-per").textContent = "Période " + per;
+    $("d-bn").textContent = bn; $("d-ba").textContent = $("q-ba").value;
+    $("d-ln").textContent = ln; $("d-la").textContent = $("q-la").value;
+    $("d-txt").textContent = "Je soussigné(e) " + bn + ", propriétaire du logement désigné ci-dessus, déclare avoir reçu de " + ln + " la somme de " + inWords(tot) + " (" + fmt.format(tot) + "), au titre du loyer et des charges pour la période " + per + ", et lui en donne quittance, sous réserve de tous mes droits.";
+    $("d-loyer").textContent = fmt.format(loyer);
+    $("d-ch").textContent = fmt.format(ch);
+    $("d-tot").textContent = fmt.format(tot);
+    var d = $("q-date").value ? new Date($("q-date").value + "T12:00:00") : null;
+    var city = ($("q-ba").value.match(/\d{5}\s+(.+)$/) || [])[1] || "";
+    $("d-fait").textContent = "Fait" + (city ? " à " + city : "") + (d ? ", le " + d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear() : "");
+  }
+  function renderIrl() {
+    var l = num("i-loyer"), o = num("i-old"), n = num("i-new");
+    if (!o) { $("i-out").textContent = "—"; $("i-txt").textContent = ""; return; }
+    var nl = Math.round(l * n / o * 100) / 100, diff = nl - l;
+    $("i-out").textContent = fmt.format(nl);
+    $("i-txt").textContent = "Soit " + (diff >= 0 ? "+" : "") + fmt.format(diff) + " par mois et " + (diff >= 0 ? "+" : "") + fmt.format(diff * 12) + " par an. Calcul : loyer × nouvel IRL ÷ IRL de référence.";
+  }
+  $("qf").addEventListener("input", render);
+  $("qf").addEventListener("submit", function (e) { e.preventDefault(); });
+  ["i-loyer", "i-old", "i-new"].forEach(function (id) { $(id).addEventListener("input", renderIrl); });
+  $("q-next").addEventListener("click", function () {
+    var m = ($("q-mois").value || "2026-10").split("-"), y = +m[0], mo = +m[1];
+    if (mo === 12) { y++; mo = 0; }
+    $("q-mois").value = y + "-" + String(mo + 1).padStart(2, "0");
+    $("q-date").value = y + "-" + String(mo + 1).padStart(2, "0") + "-03";
+    render();
+    $("q-toast").textContent = "Quittance du mois suivant prête.";
+  });
+  $("q-copy").addEventListener("click", function () {
+    var text = $("qdoc").innerText;
+    var done = function () { $("q-toast").textContent = "Texte copié."; };
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { selectDoc(); });
+    } catch (e) { selectDoc(); }
+  });
+  function selectDoc() {
+    var r = document.createRange(); r.selectNodeContents($("qdoc"));
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    $("q-toast").textContent = "Texte sélectionné : copiez-le avec Ctrl+C.";
+  }
+  render(); renderIrl();
+})();
+</script>
