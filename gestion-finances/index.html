@@ -215,6 +215,14 @@ svg text { fill: var(--muted); font-size: 11px; }
       </div>
     </div>
     <div class="card">
+      <h2>Finary</h2>
+      <p class="muted" style="margin-top:0;font-size:14px">Récupère vos comptes Finary et leurs soldes actuels. Les soldes des comptes reliés suivent ensuite ceux de Finary, même si vous ajoutez des opérations ici. Les prêts et cartes à débit différé ne sont pas importés.</p>
+      <div class="row">
+        <button class="btn primary" id="finarySync">Importer mes comptes Finary</button>
+        <span class="muted" style="font-size:13px" id="finaryStatus"></span>
+      </div>
+    </div>
+    <div class="card">
       <h2>Sauvegarde et import</h2>
       <div class="row">
         <button class="btn" id="exportJson">Exporter la sauvegarde (JSON)</button>
@@ -502,7 +510,7 @@ function renderDashboard() {
   $('#barChart').innerHTML = barChart([5, 4, 3, 2, 1, 0].map(n => shiftMonth(dashMonth, -n)));
   $('#donutChart').innerHTML = donutChart(dashMonth);
   $('#dashBudgets').innerHTML = budgetBars(dashMonth);
-  $('#dashAccounts').innerHTML = `<table><tbody>${state.accounts.map(a => { const b = accountBalance(a); return `<tr><td>${esc(a.name)}</td><td class="num ${b < 0 ? 'neg' : ''}">${fmt(b)}</td></tr>`; }).join('')}</tbody></table>`;
+  $('#dashAccounts').innerHTML = `<table><tbody>${state.accounts.map(a => { const b = accountBalance(a); return `<tr><td>${esc(a.name)}${a.finaryId ? ' <span class="pill">Finary</span>' : ''}</td><td class="num ${b < 0 ? 'neg' : ''}">${fmt(b)}</td></tr>`; }).join('')}</tbody></table>`;
   $('#dashRecent').innerHTML = `<div class="table-wrap">${txRows(sortTx(state.transactions).slice(0, 8), false)}</div>`;
 }
 $('#prevMonth').onclick = () => { dashMonth = shiftMonth(dashMonth, -1); renderDashboard(); };
@@ -656,6 +664,7 @@ function renderSettings() {
   fillSelect($('#ruleForm [name=categoryId]'), state.categories, { keep: true });
   $('#ruleList').innerHTML = state.rules.length ? `<table><tbody>${state.rules.map(r => `<tr><td><code>${esc(r.keyword)}</code></td><td>→ ${esc(cat(r.categoryId)?.name || '—')}</td><td class="num"><button class="icon" data-rule-del="${r.id}" aria-label="Supprimer">✕</button></td></tr>`).join('')}</tbody></table>` : '<div class="muted" style="font-size:14px">Aucune règle.</div>';
   $('#themeSel').value = state.theme || '';
+  renderFinaryStatus();
 }
 $('#accForm').addEventListener('submit', e => { e.preventDefault(); const f = e.target; state.accounts.push({ id: uid(), name: f.name.value.trim(), initial: round2(+f.initial.value || 0) }); f.reset(); save(); renderSettings(); });
 $('#catForm').addEventListener('submit', e => { e.preventDefault(); const f = e.target; state.categories.push({ id: uid(), name: f.name.value.trim(), type: f.type.value, color: f.color.value }); f.name.value = ''; save(); renderSettings(); });
@@ -807,9 +816,60 @@ function demoState() {
   return s;
 }
 
+// ---- Finary (comptes et soldes, en lecture seule) ----
+async function syncFinary(silent = false) {
+  const mcp = window.claude?.use ? await window.claude.use('mcp') : null;
+  if (!mcp) { if (!silent) toast('Ouvrez l\'application depuis claude.ai pour la relier à Finary'); return; }
+  const btn = $('#finarySync'); btn.disabled = true; btn.textContent = 'Import en cours…';
+  try {
+    const res = await mcp.callTool('Finary', 'accounts', {}, { cache: false });
+    const p = res.payload || {};
+    const rows = Array.isArray(p.data) ? p.data : [];
+    const inc = Array.isArray(p.included) ? p.included : [];
+    const instName = row => {
+      const conn = inc.find(i => i.type === 'institution-connections' && i.id === row.relationships?.institution_connection?.data?.id);
+      return inc.find(i => i.type === 'institutions' && i.id === conn?.relationships?.institution?.data?.id)?.attributes?.name || '';
+    };
+    const usable = rows.filter(r => r.attributes && !['loan', 'credit'].includes(r.attributes.account_type));
+    if (!usable.length) { if (!silent) toast('Aucun compte trouvé dans Finary'); return; }
+    // Au premier import, on retire le compte par défaut s'il est vide.
+    if (!state.accounts.some(a => a.finaryId) && state.accounts.length === 1) {
+      const a0 = state.accounts[0];
+      if (!a0.initial && !state.transactions.some(t => t.accountId === a0.id || t.toAccountId === a0.id)) state.accounts = [];
+    }
+    let added = 0, updated = 0, skipped = 0;
+    for (const r of usable) {
+      const at = r.attributes;
+      const bal = at.currency === 'EUR' ? parseFloat(at.balance) : parseFloat(at.full_value_eur);
+      if (!isFinite(bal)) { skipped++; continue; }
+      let a = state.accounts.find(x => x.finaryId === r.id);
+      if (!a) {
+        const inst = instName(r);
+        a = { id: uid(), name: inst ? `${at.name} (${inst})` : at.name, initial: 0, finaryId: r.id };
+        state.accounts.push(a); added++;
+      } else updated++;
+      a.finaryType = at.account_type;
+      a.initial = 0;
+      a.initial = round2(bal - accountBalance(a));
+    }
+    if (!state.accounts.length) state.accounts.push({ id: uid(), name: 'Compte courant', initial: 0 });
+    state.finarySyncedAt = new Date().toISOString();
+    save(); render();
+    if (!silent) toast(`Finary : ${added} compte(s) ajouté(s), ${updated} mis à jour${skipped ? `, ${skipped} sans solde` : ''}`);
+  } catch (e) {
+    if (!silent) toast(e?.code === 'server_not_connected' ? 'Finary n\'est pas connecté à votre compte Claude' : e?.code === 'denied' || e?.code === 'not_granted' ? 'Accès à Finary refusé' : 'Finary ne répond pas, réessayez plus tard');
+  } finally { btn.disabled = false; btn.textContent = 'Importer mes comptes Finary'; renderFinaryStatus(); }
+}
+function renderFinaryStatus() {
+  const n = state.accounts.filter(a => a.finaryId).length;
+  $('#finaryStatus').textContent = state.finarySyncedAt ? `${n} compte(s) relié(s) · dernière mise à jour le ${new Date(state.finarySyncedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : '';
+  $('#finarySync').textContent = state.finarySyncedAt ? 'Mettre à jour depuis Finary' : 'Importer mes comptes Finary';
+}
+$('#finarySync').onclick = () => syncFinary();
+
 // ---- Démarrage ----
 load(); applyTheme(); applyRecurring(); resetTxForm(); render();
-connectCloud();
+connectCloud().finally(() => { if (state.finarySyncedAt) syncFinary(true); });
 })();
 </script>
 </body>
