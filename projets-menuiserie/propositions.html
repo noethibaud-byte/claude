@@ -1,0 +1,578 @@
+<title>Projets du technicien menuisier</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+/* Layout : une feuille de calque de bureau d'études. Colonne de lecture étroite, maquettes en pleine largeur, cotes comme séparateurs. */
+:root {
+  --paper: #eef0eb;
+  --sheet: #f8f9f6;
+  --ink: #1d2a33;
+  --ink-soft: #4d5b64;
+  --rule: #c9cfc8;
+  --oak: #a8691c;
+  --oak-soft: #f1e3cc;
+  --blue: #2c5a85;
+  --good: #2f7a4a;
+  --warn: #a9661a;
+  --bad: #a43b32;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151b20; --sheet: #1c242a; --ink: #e3e7e4; --ink-soft: #a3aeb3; --rule: #36424a;
+    --oak: #e0a457; --oak-soft: #3a2c1a; --blue: #8db8e0; --good: #6fc08c; --warn: #e3a35a; --bad: #e57c72;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151b20; --sheet: #1c242a; --ink: #e3e7e4; --ink-soft: #a3aeb3; --rule: #36424a;
+  --oak: #e0a457; --oak-soft: #3a2c1a; --blue: #8db8e0; --good: #6fc08c; --warn: #e3a35a; --bad: #e57c72;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 56px; }
+.prose { max-width: 68ch; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(2.4rem, 6vw, 4rem); }
+h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+h3 { font-size: 1.35rem; }
+p { margin: 0; }
+.label { font-family: var(--mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--oak); outline-offset: 2px; }
+
+/* Cote : séparateur façon ligne de cote */
+.cote { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: .75rem; color: var(--oak); }
+.cote::before, .cote::after { content: ""; flex: 1; height: 1px; background: currentColor; }
+.cote span { white-space: nowrap; }
+.cote-ends { position: relative; }
+
+header.top { display: grid; gap: 20px; }
+header.top .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 62ch; }
+.verdict {
+  border: 1px solid var(--oak); background: var(--oak-soft); padding: 20px 22px; display: grid; gap: 8px; max-width: 760px;
+}
+.verdict strong { font-family: var(--display); font-size: 1.3rem; font-weight: 600; letter-spacing: .01em; }
+
+/* Tableau comparatif */
+.table-box { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: .93rem; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--mono); font-weight: 500; font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-soft); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.pick td { background: var(--oak-soft); }
+.dots { letter-spacing: 2px; color: var(--oak); white-space: nowrap; }
+.dots i { font-style: normal; color: var(--rule); }
+
+/* Projet */
+.project { display: grid; gap: 24px; }
+.project-head { display: grid; gap: 8px; }
+.project-head .tag { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pill { font-family: var(--mono); font-size: .72rem; padding: 3px 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink-soft); }
+.pill.rec { border-color: var(--oak); color: var(--oak); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.fact { background: var(--sheet); padding: 14px 16px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fact p { font-size: .95rem; }
+.fact .big { font-family: var(--display); font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.two > div { min-width: 0; display: grid; gap: 10px; align-content: start; }
+ul.clean { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+ul.clean li::marker { color: var(--oak); }
+.plus li::marker { content: "+  "; color: var(--good); font-family: var(--mono); }
+.minus li::marker { content: "−  "; color: var(--bad); font-family: var(--mono); }
+
+/* Navigateur factice */
+.browser { border: 1px solid var(--rule); background: var(--sheet); box-shadow: 0 18px 40px -24px rgba(20, 30, 40, .45); overflow: hidden; }
+.bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--rule); background: var(--paper); }
+.bar .dots3 { display: flex; gap: 6px; }
+.bar .dots3 b { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); display: block; }
+.bar .url { flex: 1; min-width: 0; font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); background: var(--sheet); border: 1px solid var(--rule); padding: 4px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mock { font-size: 15px; line-height: 1.5; }
+.mock button { font: inherit; cursor: pointer; }
+.caption { font-size: .85rem; color: var(--ink-soft); }
+
+/* ---------- Maquette A : Atelier Débit (plans DIY) ---------- */
+.mA { --a-bg: #f6f1e7; --a-ink: #2b2118; --a-soft: #6f6253; --a-acc: #3d6b4f; --a-card: #fffdf8; --a-line: #e1d7c4;
+  background: var(--a-bg); color: var(--a-ink); font-family: var(--body); }
+.mA nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--a-line); flex-wrap: wrap; gap: 8px; }
+.mA .logo { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.25rem; }
+.mA nav ul { display: flex; gap: 18px; list-style: none; margin: 0; padding: 0; font-size: .88rem; color: var(--a-soft); flex-wrap: wrap; }
+.mA .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; padding: 36px 24px 28px; align-items: center; }
+.mA .hero h4 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: clamp(1.6rem, 3.4vw, 2.3rem); line-height: 1.1; margin: 0 0 12px; text-wrap: balance; }
+.mA .hero p { color: var(--a-soft); margin-bottom: 18px; }
+.mA .btn { background: var(--a-acc); color: #fff; border: 0; padding: 10px 18px; font-weight: 600; }
+.mA .btn.ghost { background: transparent; color: var(--a-acc); border: 1px solid var(--a-acc); margin-left: 8px; }
+.mA .hero-art { background: var(--a-card); border: 1px solid var(--a-line); padding: 14px; color: var(--a-ink); }
+.mA .hero-art svg { width: 100%; height: auto; display: block; }
+.mA .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 0 24px 24px; }
+.mA .card { background: var(--a-card); border: 1px solid var(--a-line); padding: 12px; display: grid; gap: 6px; }
+.mA .card svg { width: 100%; height: 92px; color: var(--a-ink); }
+.mA .card .t { font-weight: 600; }
+.mA .card .m { font-size: .8rem; color: var(--a-soft); }
+.mA .card .p { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
+.mA .card .p b { color: var(--a-acc); font-size: 1.05rem; }
+.mA .debit { margin: 0 24px 28px; background: var(--a-card); border: 1px solid var(--a-line); overflow-x: auto; }
+.mA .debit table { min-width: 460px; font-size: .82rem; }
+.mA .debit th, .mA .debit td { border-color: var(--a-line); color: var(--a-ink); padding: 7px 12px; }
+.mA .debit th { color: var(--a-soft); }
+.mA .debit caption { text-align: left; padding: 10px 12px 2px; font-weight: 600; }
+
+/* ---------- Maquette B : Fenêtre Claire (particuliers) ---------- */
+.mB { --b-bg: #ffffff; --b-ink: #0f2233; --b-soft: #557085; --b-acc: #1f6fb2; --b-tint: #eaf3fb; --b-line: #d7e3ee; --b-ok: #2f7a4a;
+  background: var(--b-bg); color: var(--b-ink); }
+.mB nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--b-line); gap: 8px; flex-wrap: wrap; }
+.mB .logo { font-weight: 600; letter-spacing: -.01em; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+.mB .logo i { width: 18px; height: 18px; border: 2px solid var(--b-acc); display: inline-block; background: linear-gradient(var(--b-acc), var(--b-acc)) center/2px 100% no-repeat, linear-gradient(var(--b-acc), var(--b-acc)) center/100% 2px no-repeat; }
+.mB nav a { color: var(--b-acc); font-size: .88rem; font-weight: 600; text-decoration: none; }
+.mB .hero { background: var(--b-tint); padding: 34px 24px; display: grid; gap: 12px; }
+.mB .hero h4 { font-size: clamp(1.5rem, 3.4vw, 2.2rem); line-height: 1.15; margin: 0; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; max-width: 24ch; }
+.mB .hero p { color: var(--b-soft); max-width: 56ch; }
+.mB .trust { display: flex; gap: 16px; flex-wrap: wrap; font-size: .82rem; color: var(--b-soft); }
+.mB .trust span::before { content: "✓ "; color: var(--b-ok); font-weight: 700; }
+.mB .tool { padding: 24px; display: grid; gap: 14px; }
+.mB .tool h5 { margin: 0; font-size: 1.05rem; }
+.mB .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.mB .seg button { border: 1px solid var(--b-line); background: var(--b-bg); color: var(--b-ink); padding: 7px 14px; }
+.mB .seg button[aria-pressed="true"] { background: var(--b-acc); border-color: var(--b-acc); color: #fff; }
+.mB .result { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--b-line); border: 1px solid var(--b-line); }
+.mB .result div { background: var(--b-bg); padding: 12px; display: grid; gap: 2px; }
+.mB .result small { color: var(--b-soft); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+.mB .result b { font-size: 1rem; }
+.mB .verdict-b { font-size: .9rem; color: var(--b-soft); }
+.mB .offer { margin: 0 24px 26px; border: 2px solid var(--b-acc); padding: 18px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+.mB .offer b.price { font-size: 1.6rem; color: var(--b-acc); font-variant-numeric: tabular-nums; }
+.mB .offer ul { margin: 6px 0 0; padding-left: 1.1em; font-size: .88rem; color: var(--b-soft); }
+.mB .btn { background: var(--b-acc); color: #fff; border: 0; padding: 10px 16px; font-weight: 600; white-space: nowrap; }
+
+/* ---------- Maquette C : Carnet de Pose (pros) ---------- */
+.mC { --c-bg: #171c21; --c-panel: #1f262d; --c-ink: #e6ebef; --c-soft: #95a3ae; --c-acc: #f0b24a; --c-line: #2f3942; --c-cad: #6fc3d6;
+  background: var(--c-bg); color: var(--c-ink); }
+.mC nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--c-line); gap: 8px; flex-wrap: wrap; }
+.mC .logo { font-family: var(--display); font-weight: 700; font-size: 1.35rem; letter-spacing: .04em; text-transform: uppercase; }
+.mC .logo em { color: var(--c-acc); font-style: normal; }
+.mC nav span { font-family: var(--mono); font-size: .75rem; color: var(--c-soft); }
+.mC .hero { padding: 30px 24px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+.mC .hero h4 { font-family: var(--display); font-weight: 600; font-size: clamp(1.7rem, 3.6vw, 2.5rem); line-height: 1.02; margin: 0 0 10px; text-wrap: balance; }
+.mC .hero p { color: var(--c-soft); font-size: .93rem; }
+.mC .cad { background: #0f1418; border: 1px solid var(--c-line); padding: 10px; }
+.mC .cad svg { width: 100%; height: auto; display: block; }
+.mC .filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 24px 14px; }
+.mC .filters span { font-family: var(--mono); font-size: .72rem; border: 1px solid var(--c-line); padding: 4px 9px; color: var(--c-soft); }
+.mC .filters span.on { border-color: var(--c-acc); color: var(--c-acc); }
+.mC .rows { padding: 0 24px 20px; display: grid; gap: 1px; }
+.mC .row { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; background: var(--c-panel); padding: 11px 14px; font-size: .88rem; }
+.mC .row .fmt { font-family: var(--mono); font-size: .7rem; color: var(--c-cad); white-space: nowrap; }
+.mC .row .ref { font-family: var(--mono); font-size: .72rem; color: var(--c-soft); display: block; }
+.mC .row b { font-variant-numeric: tabular-nums; color: var(--c-acc); white-space: nowrap; }
+.mC .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 4px 24px 26px; }
+.mC .tier { border: 1px solid var(--c-line); padding: 14px; display: grid; gap: 4px; }
+.mC .tier.hi { border-color: var(--c-acc); }
+.mC .tier small { color: var(--c-soft); font-size: .8rem; }
+.mC .tier b { font-family: var(--display); font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Maquette D : Cuisine au Cordeau ---------- */
+.mD { --d-bg: #f3f5f0; --d-ink: #1f2a22; --d-soft: #5e6b61; --d-acc: #b8572e; --d-card: #ffffff; --d-line: #d9dfd5; --d-ok: #3a7a4f; --d-ko: #b8402e;
+  background: var(--d-bg); color: var(--d-ink); }
+.mD nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--d-line); gap: 8px; flex-wrap: wrap; }
+.mD .logo { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.2rem; }
+.mD nav span { font-size: .85rem; color: var(--d-soft); }
+.mD .hero { padding: 30px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.mD .hero h4 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: clamp(1.5rem, 3.2vw, 2.1rem); line-height: 1.12; margin: 0 0 10px; text-wrap: balance; }
+.mD .hero p { color: var(--d-soft); margin-bottom: 14px; }
+.mD .drop { border: 2px dashed var(--d-line); background: var(--d-card); padding: 16px; text-align: center; font-size: .85rem; color: var(--d-soft); }
+.mD .drop b { color: var(--d-ink); display: block; margin-bottom: 4px; }
+.mD .btn { background: var(--d-acc); color: #fff; border: 0; padding: 10px 16px; font-weight: 600; margin-top: 10px; }
+.mD .report { background: var(--d-card); border: 1px solid var(--d-line); padding: 14px; display: grid; gap: 8px; font-size: .86rem; }
+.mD .report .h { display: flex; justify-content: space-between; font-weight: 600; gap: 8px; flex-wrap: wrap; }
+.mD .report .h span { font-variant-numeric: tabular-nums; color: var(--d-soft); font-weight: 400; }
+.mD .chk { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+.mD .chk i { font-style: normal; font-weight: 700; width: 18px; text-align: center; }
+.mD .chk.ok i { color: var(--d-ok); }
+.mD .chk.ko i { color: var(--d-ko); }
+.mD .chk small { display: block; color: var(--d-soft); }
+.mD .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 24px 26px; }
+.mD .steps div { background: var(--d-card); border: 1px solid var(--d-line); padding: 12px; font-size: .86rem; }
+.mD .steps b { display: block; font-family: "Fraunces", Georgia, serif; font-size: 1rem; margin-bottom: 2px; }
+
+/* Plan de démarrage */
+.plan { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.step { background: var(--sheet); display: grid; grid-template-columns: 120px 1fr; gap: 18px; padding: 16px 18px; }
+.step .when { font-family: var(--mono); font-size: .8rem; color: var(--oak); padding-top: 3px; }
+.step .what { min-width: 0; display: grid; gap: 4px; }
+.step .what b { font-family: var(--display); font-size: 1.2rem; font-weight: 600; letter-spacing: .01em; }
+.step .what p { color: var(--ink-soft); font-size: .95rem; }
+
+.warnbox { border-left: 3px solid var(--warn); background: var(--sheet); padding: 16px 18px; display: grid; gap: 8px; }
+
+@media (max-width: 760px) {
+  .two, .mA .hero, .mC .hero, .mD .hero { grid-template-columns: 1fr; }
+  .mA .grid, .mC .tiers, .mD .steps { grid-template-columns: 1fr; }
+  .mB .result { grid-template-columns: 1fr 1fr; }
+  .mB .offer { grid-template-columns: 1fr; }
+  .mC .row { grid-template-columns: 1fr auto; }
+  .mC .row .fmt { display: none; }
+  .step { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mB .result b { transition: color .2s; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="label">Dossier · Revenus complémentaires · 14 h par semaine</p>
+    <h1>Ton savoir de bureau d'études peut se vendre</h1>
+    <p class="lede">Quatre projets concrets construits autour de ce que tu fais déjà tous les jours : dessiner, coter, établir des débits, connaître les menuiseries et les règles de pose. Chaque projet a sa maquette, ses prix, le temps qu'il demande et ses risques.</p>
+    <div class="verdict">
+      <p class="label">Ma recommandation</p>
+      <strong>Commence par le projet A (plans de meubles à télécharger), puis ajoute le C (bibliothèque technique pour les pros).</strong>
+      <p>Le projet A est celui qui ressemble le plus à un vrai revenu passif : un plan dessiné une fois se vend des centaines de fois, et Etsy t'amène des acheteurs dès le premier jour, sans audience ni publicité. Il utilise exactement tes compétences (plans, cotes, listes de débit) et rentre dans 14 h par semaine.</p>
+    </div>
+  </header>
+
+  <section class="project" aria-labelledby="cmp">
+    <div class="project-head">
+      <p class="label">Vue d'ensemble</p>
+      <h2 id="cmp">Les quatre projets comparés</h2>
+    </div>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr><th>Projet</th><th>Ce que tu vends</th><th>Passif</th><th>1<sup>res</sup> ventes</th><th>Potentiel à 18 mois*</th><th>Risque principal</th></tr>
+        </thead>
+        <tbody>
+          <tr class="pick"><td><b>A · Atelier Débit</b><br><span class="caption">Plans de meubles pour bricoleurs</span></td><td>Plans PDF à 9–29 €</td><td><span class="dots">●●●●<i>●</i></span></td><td class="num">1–2 mois</td><td class="num">500–2 000 €/mois</td><td>Il faut 30 à 60 plans pour décoller</td></tr>
+          <tr><td><b>B · Fenêtre Claire</b><br><span class="caption">Guide fenêtres pour particuliers</span></td><td>Vérification de devis, kit PDF, mise en relation</td><td><span class="dots">●●<i>●●●</i></span></td><td class="num">4–8 mois</td><td class="num">300–2 500 €/mois</td><td>Trafic Google en baisse à cause des réponses IA</td></tr>
+          <tr><td><b>C · Carnet de Pose</b><br><span class="caption">Détails techniques pour artisans</span></td><td>Packs DWG/PDF à 49–149 €, abonnement</td><td><span class="dots">●●●●<i>●</i></span></td><td class="num">2–4 mois</td><td class="num">400–3 000 €/mois</td><td>Clause de ton contrat de travail, marché plus petit</td></tr>
+          <tr><td><b>D · Cuisine au Cordeau</b><br><span class="caption">Relecture de plans de cuisine</span></td><td>Prestation à 79–149 €</td><td><span class="dots">●<i>●●●●</i></span></td><td class="num">2–6 semaines</td><td class="num">600–2 000 €/mois</td><td>C'est du temps vendu, donc pas passif</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">* Ordres de grandeur pour 14 h par semaine de travail régulier, à prendre comme des hypothèses et non comme des promesses. Beaucoup de projets restent sous ces fourchettes, surtout les six premiers mois.</p>
+  </section>
+
+  <div class="cote"><span>Projet A</span></div>
+
+  <!-- ================= PROJET A ================= -->
+  <section class="project" aria-labelledby="pA">
+    <div class="project-head">
+      <div class="tag"><span class="pill rec">Recommandé pour démarrer</span><span class="pill">Particuliers · France + international</span></div>
+      <h2 id="pA">A · Atelier Débit : des plans de meubles dessinés par un pro</h2>
+      <p class="prose">Tu vends des plans de construction en PDF pour bricoleurs : banc d'entrée, bibliothèque, table de ferme, lit cabane, meuble TV, établi. Ce qui te démarque des plans amateurs vendus partout, c'est la qualité bureau d'études : vues cotées, éclatés, <b>liste de débit au millimètre</b>, plan de calepinage des panneaux, quincaillerie référencée et ordre de montage.</p>
+    </div>
+
+    <div class="browser">
+      <div class="bar"><div class="dots3"><b></b><b></b><b></b></div><div class="url">atelier-debit.fr</div></div>
+      <div class="mock mA">
+        <nav><span class="logo">Atelier Débit</span><ul><li>Plans</li><li>Packs</li><li>Débutants</li><li>Fichiers SketchUp</li></ul></nav>
+        <div class="hero">
+          <div>
+            <h4>Des plans de meubles dessinés comme en bureau d'études</h4>
+            <p>Vues cotées, liste de débit au millimètre et calepinage de vos panneaux. Vous savez quoi acheter et où couper avant d'entrer dans le magasin.</p>
+            <button class="btn" type="button">Voir les plans</button><button class="btn ghost" type="button">Plan gratuit</button>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <svg viewBox="0 0 320 190" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="40" y="40" width="200" height="16" fill="none"/>
+              <rect x="56" y="56" width="14" height="96"/>
+              <rect x="210" y="56" width="14" height="96"/>
+              <rect x="70" y="118" width="140" height="10"/>
+              <line x1="40" y1="24" x2="240" y2="24" stroke-width="1"/>
+              <line x1="40" y1="18" x2="40" y2="30" stroke-width="1"/>
+              <line x1="240" y1="18" x2="240" y2="30" stroke-width="1"/>
+              <text x="140" y="19" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" stroke="none">1 200</text>
+              <line x1="262" y1="40" x2="262" y2="152" stroke-width="1"/>
+              <line x1="256" y1="40" x2="268" y2="40" stroke-width="1"/>
+              <line x1="256" y1="152" x2="268" y2="152" stroke-width="1"/>
+              <text x="274" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" stroke="none">450</text>
+              <text x="40" y="178" font-family="IBM Plex Mono, monospace" font-size="9" fill="currentColor" stroke="none">BANC D'ENTRÉE · CHÊNE 27 mm · éch. 1/10</text>
+            </svg>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <svg viewBox="0 0 120 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="30" y="8" width="60" height="66"/><line x1="30" y1="30" x2="90" y2="30"/><line x1="30" y1="52" x2="90" y2="52"/></svg>
+            <span class="t">Bibliothèque modulable</span><span class="m">Contreplaqué 18 mm · niveau facile</span>
+            <span class="p"><span class="m">PDF + liste de débit</span><b>14 €</b></span>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 120 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="14" y="22" width="92" height="8"/><line x1="22" y1="30" x2="22" y2="72"/><line x1="98" y1="30" x2="98" y2="72"/><line x1="22" y1="58" x2="98" y2="58"/></svg>
+            <span class="t">Table de ferme 6 couverts</span><span class="m">Chêne massif · niveau confirmé</span>
+            <span class="p"><span class="m">PDF + SketchUp</span><b>24 €</b></span>
+          </div>
+          <div class="card">
+            <svg viewBox="0 0 120 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="20,40 60,10 100,40"/><rect x="24" y="40" width="72" height="30"/><line x1="24" y1="56" x2="96" y2="56"/></svg>
+            <span class="t">Lit cabane 90×190</span><span class="m">Pin 45×45 · niveau moyen</span>
+            <span class="p"><span class="m">PDF + liste de débit</span><b>19 €</b></span>
+          </div>
+        </div>
+        <div class="debit">
+          <table>
+            <caption>Extrait : liste de débit du banc d'entrée</caption>
+            <thead><tr><th>Repère</th><th>Pièce</th><th>Qté</th><th>L × l × ép. (mm)</th><th>Matière</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Assise</td><td>1</td><td class="num">1 200 × 350 × 27</td><td>Chêne</td></tr>
+              <tr><td>2</td><td>Pied</td><td>2</td><td class="num">423 × 330 × 27</td><td>Chêne</td></tr>
+              <tr><td>3</td><td>Tablette basse</td><td>1</td><td class="num">1 092 × 300 × 18</td><td>Chêne</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Maquette. Le site arrive en deuxième temps : au départ, tu vends sur Etsy, qui apporte le trafic, puis tu rediriges les acheteurs vers ton site, où tu ne paies pas de commission.</p>
+
+    <div class="facts">
+      <div class="fact"><span class="label">Prix</span><p><span class="big">9–29 €</span><br>par plan, packs de 3 à 5 plans à 39–59 €, version anglaise pour l'international</p></div>
+      <div class="fact"><span class="label">Production</span><p><span class="big">1 plan / semaine</span><br>environ 8 à 12 h par plan au début, puis 5 à 6 h une fois ton gabarit de mise en page prêt</p></div>
+      <div class="fact"><span class="label">Trafic</span><p>Etsy dès le jour 1, puis Pinterest (très fort en DIY), puis des vidéos courtes de fabrication</p></div>
+      <div class="fact"><span class="label">Coûts de départ</span><p>Moins de 100 € : frais de mise en ligne Etsy de 0,20 $ par annonce, un nom de domaine, du bois pour fabriquer quelques prototypes à photographier</p></div>
+    </div>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="clean plus"><li>Marge proche de 100 %, aucun stock, aucune livraison.</li><li>Tes plans sont objectivement meilleurs que la moyenne : c'est ton métier.</li><li>Chaque plan ajouté continue de se vendre pendant des années.</li><li>Le marché anglophone multiplie le potentiel par 5 à 10 pour le même travail.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="clean minus"><li>Les premiers mois rapportent peu : il faut un catalogue avant que les ventes deviennent régulières.</li><li>Les photos du meuble réel vendent beaucoup mieux qu'un rendu 3D, donc il faudra en fabriquer quelques-uns.</li><li>Le piratage des PDF existe, mais il reste marginal à ces prix.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="cote"><span>Projet B</span></div>
+
+  <!-- ================= PROJET B ================= -->
+  <section class="project" aria-labelledby="pB">
+    <div class="project-head">
+      <div class="tag"><span class="pill">Particuliers · France</span><span class="pill">Audience à construire</span></div>
+      <h2 id="pB">B · Fenêtre Claire : changer ses fenêtres sans se faire avoir</h2>
+      <p class="prose">Un site de conseil indépendant pour les particuliers qui remplacent leurs fenêtres. Tu y proposes des outils gratuits (comparateur de matériaux, guide pour lire un devis, explication de l'Uw, de la pose en rénovation ou en dépose totale, du DTU 36.5) et tu vends ce qui fait gagner du temps : un <b>kit PDF pour vérifier son devis</b> et une <b>relecture de devis par un technicien</b>.</p>
+    </div>
+
+    <div class="browser">
+      <div class="bar"><div class="dots3"><b></b><b></b><b></b></div><div class="url">fenetre-claire.fr/comparateur</div></div>
+      <div class="mock mB">
+        <nav><span class="logo"><i></i>Fenêtre Claire</span><a href="#pB">Faire vérifier mon devis</a></nav>
+        <div class="hero">
+          <h4>Changer ses fenêtres sans se tromper de devis</h4>
+          <p>Les conseils d'un technicien bureau d'études en menuiserie, sans rien à vous vendre côté fabricant. Comparez, comprenez votre devis, posez les bonnes questions.</p>
+          <div class="trust"><span>Indépendant des fabricants</span><span>Pose selon le DTU 36.5 expliquée</span><span>Réponse sous 48 h</span></div>
+        </div>
+        <div class="tool">
+          <h5>Quel matériau pour vos fenêtres ?</h5>
+          <div class="seg" role="group" aria-label="Matériau">
+            <button type="button" data-m="pvc" aria-pressed="true">PVC</button>
+            <button type="button" data-m="bois" aria-pressed="false">Bois</button>
+            <button type="button" data-m="alu" aria-pressed="false">Aluminium</button>
+            <button type="button" data-m="mixte" aria-pressed="false">Bois-alu</button>
+          </div>
+          <div class="result" aria-live="polite">
+            <div><small>Budget</small><b id="r-budget">€</b></div>
+            <div><small>Entretien</small><b id="r-entretien">Très faible</b></div>
+            <div><small>Isolation</small><b id="r-iso">Très bonne</b></div>
+            <div><small>Durée de vie</small><b id="r-vie">25–35 ans</b></div>
+          </div>
+          <p class="verdict-b" id="r-txt">Le meilleur rapport qualité-prix pour la majorité des rénovations. Attention aux profilés très larges qui réduisent le clair de vitrage.</p>
+        </div>
+        <div class="offer">
+          <div>
+            <b>Vérification de votre devis par un technicien</b>
+            <ul><li>Contrôle des performances annoncées (Uw, Sw, vitrage)</li><li>Type de pose, étanchéité, appuis et habillages</li><li>Les lignes manquantes qui coûtent cher plus tard</li></ul>
+          </div>
+          <div><b class="price">49 €</b><br><button class="btn" type="button">Envoyer mon devis</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Maquette interactive : clique sur les matériaux.</p>
+
+    <div class="facts">
+      <div class="fact"><span class="label">Prix</span><p><span class="big">19 € · 49 €</span><br>kit PDF de vérification, puis relecture personnalisée</p></div>
+      <div class="fact"><span class="label">Autres revenus</span><p>Mise en relation avec des menuisiers poseurs locaux (15 à 40 € le contact qualifié), affiliation sur l'outillage et les produits d'entretien</p></div>
+      <div class="fact"><span class="label">Trafic</span><p>Google, YouTube (« comment lire un devis de fenêtres »), groupes Facebook de rénovation</p></div>
+      <div class="fact"><span class="label">Délai</span><p>4 à 8 mois avant un trafic régulier, souvent plus</p></div>
+    </div>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="clean plus"><li>Achat cher et stressant : les gens paient volontiers 49 € pour sécuriser un devis à 8 000 €.</li><li>Ton expertise réelle se voit immédiatement, et l'IA la remplace mal.</li><li>La mise en relation est très lucrative en rénovation.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="clean minus"><li>Le trafic Google des sites de conseil baisse avec les réponses IA : il faudra miser aussi sur la vidéo.</li><li>La relecture de devis prend du temps, ce n'est pas passif.</li><li>Les aides à la rénovation changent souvent, donc le contenu doit être tenu à jour.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="cote"><span>Projet C</span></div>
+
+  <!-- ================= PROJET C ================= -->
+  <section class="project" aria-labelledby="pC">
+    <div class="project-head">
+      <div class="tag"><span class="pill rec">Deuxième étape conseillée</span><span class="pill">Professionnels · France</span></div>
+      <h2 id="pC">C · Carnet de Pose : la bibliothèque technique des petites menuiseries</h2>
+      <p class="prose">Les petites entreprises de menuiserie (1 à 10 personnes) n'ont souvent pas de bureau d'études. Tu leur vends ce que tu produis tous les jours : <b>détails de pose en DWG/DXF/PDF</b> (applique, tunnel, feuillure, ITE), <b>fiches de pose</b> à remettre aux équipes, <b>tableur de chiffrage</b> menuiserie et <b>modèles de devis</b>. Un pro paie sans hésiter 79 € pour gagner une demi-journée.</p>
+    </div>
+
+    <div class="browser">
+      <div class="bar"><div class="dots3"><b></b><b></b><b></b></div><div class="url">carnet-de-pose.fr/details</div></div>
+      <div class="mock mC">
+        <nav><span class="logo">Carnet de <em>Pose</em></span><span>142 détails · DWG · DXF · PDF</span></nav>
+        <div class="hero">
+          <div>
+            <h4>Les détails de pose que vous redessinez à chaque chantier</h4>
+            <p>Coupes verticales et horizontales prêtes à coller dans vos plans d'exécution. Calques propres, cotes modifiables, conformes aux règles de mise en œuvre.</p>
+          </div>
+          <div class="cad" aria-hidden="true">
+            <svg viewBox="0 0 300 170" fill="none" stroke-width="1.4">
+              <rect x="20" y="20" width="70" height="130" stroke="#5b6a75" fill="#1c2329"/>
+              <path d="M20 20 l70 30 M20 50 l70 30 M20 80 l70 30 M20 110 l70 30" stroke="#33404a"/>
+              <rect x="90" y="20" width="40" height="130" stroke="#8a7a5c" fill="#2a2418"/>
+              <rect x="130" y="60" width="22" height="70" stroke="#6fc3d6"/>
+              <rect x="152" y="66" width="10" height="58" stroke="#6fc3d6"/>
+              <line x1="162" y1="70" x2="220" y2="70" stroke="#6fc3d6" stroke-dasharray="3 3"/>
+              <rect x="128" y="130" width="60" height="8" stroke="#f0b24a"/>
+              <line x1="130" y1="160" x2="152" y2="160" stroke="#e6ebef" stroke-width="1"/>
+              <text x="141" y="157" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" fill="#e6ebef">70</text>
+              <text x="196" y="30" font-family="IBM Plex Mono, monospace" font-size="8" fill="#95a3ae">ITE 140 mm</text>
+              <text x="196" y="44" font-family="IBM Plex Mono, monospace" font-size="8" fill="#95a3ae">Pose en applique</text>
+              <text x="196" y="58" font-family="IBM Plex Mono, monospace" font-size="8" fill="#95a3ae">Bavette alu</text>
+            </svg>
+          </div>
+        </div>
+        <div class="filters"><span class="on">Pose en applique</span><span>Tunnel</span><span>Feuillure</span><span>ITE</span><span>Portes</span><span>Fiches de pose</span></div>
+        <div class="rows">
+          <div class="row"><span>Applique intérieure, mur béton + doublage 100 mm<span class="ref">CP-APL-012 · coupe verticale + horizontale</span></span><span class="fmt">DWG · DXF · PDF</span><b>9 €</b></div>
+          <div class="row"><span>Pose en tunnel, appui béton existant, rénovation<span class="ref">CP-TUN-004 · coupe verticale</span></span><span class="fmt">DWG · DXF · PDF</span><b>9 €</b></div>
+          <div class="row"><span>Applique extérieure sur ITE 140 mm, bavette alu<span class="ref">CP-ITE-021 · 3 coupes</span></span><span class="fmt">DWG · DXF · PDF</span><b>12 €</b></div>
+        </div>
+        <div class="tiers">
+          <div class="tier"><small>Pack Rénovation</small><b>79 €</b><small>38 détails + 6 fiches de pose</small></div>
+          <div class="tier hi"><small>Bibliothèque complète</small><b>149 €</b><small>Tous les détails actuels</small></div>
+          <div class="tier"><small>Abonnement</small><b>12 €/mois</b><small>Nouveaux détails chaque mois</small></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Maquette. Références et détails fictifs, uniquement pour illustrer.</p>
+
+    <div class="facts">
+      <div class="fact"><span class="label">Prix</span><p><span class="big">9–149 €</span><br>à l'unité, en packs ou en abonnement mensuel</p></div>
+      <div class="fact"><span class="label">Production</span><p>3 à 5 détails par semaine : c'est ton métier, tu vas vite</p></div>
+      <div class="fact"><span class="label">Trafic</span><p>LinkedIn, groupes Facebook de menuisiers, forums pros, salons, bouche-à-oreille</p></div>
+      <div class="fact"><span class="label">Extension</span><p>Plus tard, un petit outil en ligne de chiffrage ou de débit, vendu en abonnement</p></div>
+    </div>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="clean plus"><li>Les pros achètent vite et ne négocient pas un outil à 79 € qui leur fait gagner une demi-journée.</li><li>Très peu de concurrence en français sur ce créneau précis.</li><li>Ton titre de technicien bureau d'études te rend crédible immédiatement.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="clean minus"><li><b>Ton contrat de travail</b> : clause d'exclusivité ou de non-concurrence, et interdiction absolue de réutiliser les dessins de ton employeur. Tout doit être redessiné de zéro.</li><li>Ta responsabilité : préciser que les détails sont des modèles à adapter, pas une étude d'exécution.</li><li>Le marché est plus petit que celui des particuliers.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="cote"><span>Projet D</span></div>
+
+  <!-- ================= PROJET D ================= -->
+  <section class="project" aria-labelledby="pD">
+    <div class="project-head">
+      <div class="tag"><span class="pill">Particuliers · France</span><span class="pill">Prestation, revenus rapides</span></div>
+      <h2 id="pD">D · Cuisine au Cordeau : faire vérifier son plan de cuisine</h2>
+      <p class="prose">Les gens conçoivent leur cuisine avec le configurateur d'une grande enseigne et découvrent les erreurs à la pose : tiroir qui bute sur la poignée du four, angle mort, plan de travail trop court, prises mal placées. Tu proposes une <b>relecture du plan avant commande</b>, avec un rapport point par point.</p>
+    </div>
+
+    <div class="browser">
+      <div class="bar"><div class="dots3"><b></b><b></b><b></b></div><div class="url">cuisine-au-cordeau.fr</div></div>
+      <div class="mock mD">
+        <nav><span class="logo">Cuisine au Cordeau</span><span>Rapport sous 72 h</span></nav>
+        <div class="hero">
+          <div>
+            <h4>Votre plan de cuisine vérifié avant de commander</h4>
+            <p>Un technicien menuiserie relit votre plan point par point : circulation, ouvertures, électricité, plans de travail. Vous commandez sans mauvaise surprise.</p>
+            <div class="drop"><b>Déposez votre plan ici</b>Export du configurateur, PDF ou photo · cotes de la pièce</div>
+            <button class="btn" type="button">Vérifier mon plan · 89 €</button>
+          </div>
+          <div class="report">
+            <div class="h">Rapport · Cuisine en L 3,20 × 2,40 m<span>38 / 42 points OK</span></div>
+            <div class="chk ok"><i>✓</i><span>Triangle évier, plaque, réfrigérateur<small>Distances cohérentes, circulation dégagée</small></span></div>
+            <div class="chk ko"><i>✕</i><span>Tiroir d'angle bas<small>Bute sur la poignée du lave-vaisselle : prévoir une fileuse de 50 mm</small></span></div>
+            <div class="chk ko"><i>✕</i><span>Hotte au-dessus de la plaque<small>Hauteur à vérifier selon la notice du fabricant</small></span></div>
+            <div class="chk ok"><i>✓</i><span>Profondeur du plan de travail<small>650 mm, débord correct sur les façades</small></span></div>
+          </div>
+        </div>
+        <div class="steps">
+          <div><b>Vous envoyez</b>Le plan et les cotes de la pièce</div>
+          <div><b>Je vérifie</b>42 points de contrôle de conception</div>
+          <div><b>Vous recevez</b>Un rapport PDF avec les corrections</div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Maquette.</p>
+
+    <div class="facts">
+      <div class="fact"><span class="label">Prix</span><p><span class="big">79–149 €</span><br>selon la taille de la cuisine, environ 1 h à 1 h 30 de travail</p></div>
+      <div class="fact"><span class="label">Volume réaliste</span><p>8 à 15 relectures par mois dans tes 14 h hebdomadaires</p></div>
+      <div class="fact"><span class="label">Version passive</span><p>Transformer ta grille de contrôle en guide PDF à 19 € : « Les 42 points à vérifier avant de commander sa cuisine »</p></div>
+      <div class="fact"><span class="label">Trafic</span><p>Groupes Facebook de rénovation, Instagram avant/après, Google</p></div>
+    </div>
+    <div class="two">
+      <div><h3>Pourquoi ça tient la route</h3><ul class="clean plus"><li>Premiers euros en quelques semaines : idéal pour valider que les gens paient.</li><li>Problème très fréquent et coûteux, valeur facile à expliquer.</li><li>Les retours clients nourrissent ensuite un guide qui, lui, est passif.</li></ul></div>
+      <div><h3>Ce qui peut coincer</h3><ul class="clean minus"><li>Tu vends ton temps : les revenus s'arrêtent quand tu t'arrêtes.</li><li>Responsabilité en cas d'erreur : à cadrer dans les conditions de vente.</li><li>Tu dépends de la qualité des cotes fournies par le client.</li></ul></div>
+    </div>
+  </section>
+
+  <div class="cote"><span>Démarrage</span></div>
+
+  <!-- ================= PLAN ================= -->
+  <section class="project" aria-labelledby="plan">
+    <div class="project-head">
+      <p class="label">Projet A · 14 h par semaine</p>
+      <h2 id="plan">Tes 12 premières semaines</h2>
+    </div>
+    <div class="plan">
+      <div class="step"><span class="when">Semaine 1</span><div class="what"><b>Vérifier le cadre</b><p>Relire ton contrat de travail (exclusivité, non-concurrence), créer une micro-entreprise (gratuit, en ligne), ouvrir une boutique Etsy. Regarder les 50 plans de meubles les plus vendus sur Etsy pour repérer les types de meubles demandés et les points faibles des concurrents.</p></div></div>
+      <div class="step"><span class="when">Semaines 2–3</span><div class="what"><b>Créer ton gabarit de plan</b><p>Une mise en page qui sera la signature de tes plans : cartouche, vue 3D, vues cotées, éclaté, liste de débit, calepinage, quincaillerie, étapes de montage. C'est l'investissement qui te fera gagner du temps sur chaque plan suivant.</p></div></div>
+      <div class="step"><span class="when">Semaines 3–6</span><div class="what"><b>Publier les 5 premiers plans</b><p>Des meubles simples et très recherchés : banc d'entrée, étagère murale, meuble à chaussures, table basse, jardinière. Un plan gratuit en plus pour récolter des adresses email.</p></div></div>
+      <div class="step"><span class="when">Semaines 6–9</span><div class="what"><b>Fabriquer et photographier</b><p>Fabriquer 2 ou 3 des meubles les plus vus pour avoir de vraies photos. Publier sur Pinterest (épingles avec les plans cotés) et filmer la fabrication en vidéos courtes.</p></div></div>
+      <div class="step"><span class="when">Semaines 9–12</span><div class="what"><b>Mesurer et doubler la mise</b><p>Viser 12 à 15 plans en ligne. Repérer ceux qui se vendent, dessiner des variantes (tailles, essences), créer un premier pack. Traduire les meilleurs en anglais.</p></div></div>
+    </div>
+    <div class="warnbox">
+      <p class="label">À vérifier avant de lancer quoi que ce soit</p>
+      <ul class="clean">
+        <li><b>Ton contrat de travail</b> : une clause d'exclusivité ou de non-concurrence peut limiter une activité dans le même secteur. Si tu as un doute, demande l'accord écrit de ton employeur.</li>
+        <li><b>La propriété intellectuelle</b> : ne réutilise jamais un plan, un détail ou un fichier produit pour ton employeur. Tout se redessine de zéro, chez toi, sur ton matériel.</li>
+        <li><b>Le statut</b> : la micro-entreprise suffit pour démarrer. Ventes de fichiers et prestations sont déclarées à l'URSSAF ; vérifie le régime de TVA applicable aux ventes numériques à des clients d'autres pays de l'UE.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="project" aria-labelledby="next">
+    <div class="project-head">
+      <h2 id="next">Ce que je peux construire ensuite</h2>
+      <p class="prose">Dis-moi quel projet te parle, et je peux passer à du concret : le vrai site en ligne, le gabarit de mise en page de tes plans avec une liste de débit qui se calcule automatiquement, le comparateur de fenêtres complet, ou la grille de 42 points pour les cuisines.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var data = {
+    pvc:   { budget: "€",   entretien: "Très faible", iso: "Très bonne", vie: "25–35 ans", txt: "Le meilleur rapport qualité-prix pour la majorité des rénovations. Attention aux profilés très larges qui réduisent le clair de vitrage." },
+    bois:  { budget: "€€",  entretien: "Régulier",    iso: "Excellente", vie: "40–60 ans", txt: "Chaleureux et très isolant, idéal en maison ancienne. Demande une lasure ou une peinture tous les 5 à 10 ans selon l'exposition." },
+    alu:   { budget: "€€€", entretien: "Très faible", iso: "Bonne",      vie: "40–50 ans", txt: "Profilés fins et grandes surfaces vitrées. Vérifiez la présence d'une rupture de pont thermique et la valeur Uw annoncée." },
+    mixte: { budget: "€€€", entretien: "Faible",      iso: "Excellente", vie: "50 ans et plus", txt: "Le bois à l'intérieur, l'aluminium à l'extérieur : le confort du bois sans son entretien. La solution la plus chère." }
+  };
+  var buttons = document.querySelectorAll(".mB .seg button");
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var d = data[btn.dataset.m];
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      document.getElementById("r-budget").textContent = d.budget;
+      document.getElementById("r-entretien").textContent = d.entretien;
+      document.getElementById("r-iso").textContent = d.iso;
+      document.getElementById("r-vie").textContent = d.vie;
+      document.getElementById("r-txt").textContent = d.txt;
+    });
+  });
+})();
+</script>
