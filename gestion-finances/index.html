@@ -34,28 +34,29 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 nav { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; }
 nav button { background: none; border: 0; color: var(--muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font: inherit; white-space: nowrap; }
 nav button.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
-main { max-width: 1100px; margin: 0 auto; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { overflow-x: clip; max-width: 1100px; margin: 0 auto; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; min-width: 0; }
 .card h2 { font-size: 16px; margin: 0 0 12px; }
 .grid { display: grid; gap: 16px; }
-.kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.two { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
 .kpi .label { color: var(--muted); font-size: 13px; }
 .kpi .value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .pos { color: var(--pos); } .neg { color: var(--neg); } .muted { color: var(--muted); }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .spacer { flex: 1; }
 input, select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; min-width: 0; }
-button.btn { font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.btn { display: inline-block; font: inherit; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 button.danger { color: var(--neg); }
 button.icon { background: none; border: 0; cursor: pointer; color: var(--muted); padding: 4px 6px; font-size: 15px; }
 button.icon:hover { color: var(--text); }
-form.grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
+form.grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 10px; align-items: end; }
 label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+td.num, th.num { white-space: nowrap; }
 td.note { white-space: normal; min-width: 140px; }
 th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
 td.num, th.num { text-align: right; }
@@ -81,10 +82,16 @@ svg text { fill: var(--muted); font-size: 11px; }
 .sync[data-s="ok"]::before { background: var(--pos); }
 .sync[data-s="error"]::before { background: var(--neg); }
 .sync[data-s="busy"]::before { background: var(--warn); }
-.pill { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--surface-2); color: var(--muted); }
+.pill { white-space: nowrap; font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--surface-2); color: var(--muted); }
 @media (max-width: 600px) { .kpi .value { font-size: 20px; } .brand { font-size: 16px; } }
 /* Sur téléphone, chaque opération devient une fiche avec les boutons Modifier / Supprimer toujours visibles */
 @media (max-width: 700px) {
+  .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpis .card { padding: 12px; margin: 0; }
+  .kpi .value { font-size: 18px; }
+  .acc-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .acc-table td { border: 0; padding: 0; }
+  .acc-table td:first-child { grid-column: 1 / -1; }
   table.tx thead { display: none; }
   table.tx, table.tx tbody { display: block; }
   table.tx tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -264,7 +271,7 @@ svg text { fill: var(--muted); font-size: 11px; }
         <button class="btn" id="loadDemo">Charger des données de démonstration</button>
         <button class="btn danger" id="resetAll">Tout effacer</button>
       </div>
-      <p class="muted" style="font-size:13px">Vos données restent uniquement dans ce navigateur (stockage local). Pensez à exporter une sauvegarde régulièrement.</p>
+      <p class="muted" style="font-size:13px">Sur claude.ai, vos données sont enregistrées dans votre compte Claude, visibles par vous seul. Ouvert comme simple fichier, l'application les garde dans ce navigateur. Dans les deux cas, exportez une sauvegarde de temps en temps.</p>
     </div>
   </section>
 </main>
@@ -506,7 +513,7 @@ function txRows(list, actions = true) {
     const catCell = isTr ? '<span class="pill">Virement</span>' : `<span class="dot" style="background:${c?.color || '#999'}"></span>${esc(c?.name || '—')}`;
     const accCell = isTr ? `${esc(a?.name || '—')} → ${esc(acc(t.toAccountId)?.name || '—')}` : esc(a?.name || '—');
     const amt = isTr ? `<span class="muted">${fmt(t.amount)}</span>` : `<span class="${t.type === 'revenu' ? 'pos' : 'neg'}">${t.type === 'revenu' ? '+' : '−'}${fmt(t.amount)}</span>`;
-    return `<tr><td>${new Date(t.date + 'T00:00').toLocaleDateString('fr-FR')}</td><td>${catCell}</td><td class="note">${esc(t.note)}${t.recurringId ? ' <span class="pill" title="Opération récurrente">↻</span>' : ''}</td><td>${accCell}</td><td class="num">${amt}</td>${actions ? `<td class="num"><button class="icon" data-edit="${t.id}" title="Modifier" aria-label="Modifier">✎</button><button class="icon" data-del="${t.id}" title="Supprimer" aria-label="Supprimer">✕</button></td>` : ''}</tr>`;
+    return `<tr><td style="white-space:nowrap">${new Date(t.date + 'T00:00').toLocaleDateString('fr-FR')}</td><td>${catCell}</td><td class="note">${esc(t.note)}${t.recurringId ? ' <span class="pill" title="Opération récurrente">↻</span>' : ''}</td><td>${accCell}</td><td class="num">${amt}</td>${actions ? `<td class="num"><button class="icon" data-edit="${t.id}" title="Modifier" aria-label="Modifier">✎</button><button class="icon" data-del="${t.id}" title="Supprimer" aria-label="Supprimer">✕</button></td>` : ''}</tr>`;
   }).join('')}</tbody></table>`;
 }
 const sortTx = list => [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.created || 0) - (a.created || 0));
@@ -676,7 +683,7 @@ $('#goalList').addEventListener('click', async e => {
 
 // ---- Paramètres ----
 function renderSettings() {
-  $('#accList').innerHTML = `<table><tbody>${state.accounts.map(a => `<tr><td><input value="${esc(a.name)}" data-acc-name="${a.id}" style="width:100%"></td><td class="num"><span class="muted" style="font-size:12px">initial</span> <input type="number" step="0.01" value="${a.initial || 0}" data-acc-init="${a.id}" style="width:100px;text-align:right"></td><td class="num">${fmt(accountBalance(a))}</td><td class="num"><button class="icon" data-acc-del="${a.id}" aria-label="Supprimer">✕</button></td></tr>`).join('')}</tbody></table>`;
+  $('#accList').innerHTML = `<table class="acc-table"><tbody>${state.accounts.map(a => `<tr><td><input value="${esc(a.name)}" data-acc-name="${a.id}" style="width:100%"></td><td class="num"><span class="muted" style="font-size:12px">initial</span> <input type="number" step="0.01" value="${a.initial || 0}" data-acc-init="${a.id}" style="width:100px;text-align:right"></td><td class="num">${fmt(accountBalance(a))}</td><td class="num"><button class="icon" data-acc-del="${a.id}" aria-label="Supprimer">✕</button></td></tr>`).join('')}</tbody></table>`;
   $('#catList').innerHTML = `<table><tbody>${state.categories.map(c => `<tr><td><input type="color" value="${c.color}" data-cat-color="${c.id}" style="padding:0;width:28px;height:28px;border:0;background:none"></td><td><input value="${esc(c.name)}" data-cat-name="${c.id}" style="width:100%"></td><td><span class="pill">${c.type === 'revenu' ? 'Revenu' : 'Dépense'}</span></td><td class="num"><button class="icon" data-cat-del="${c.id}" aria-label="Supprimer">✕</button></td></tr>`).join('')}</tbody></table>`;
   fillSelect($('#ruleForm [name=categoryId]'), state.categories, { keep: true });
   $('#ruleList').innerHTML = state.rules.length ? `<table><tbody>${state.rules.map(r => `<tr><td><code>${esc(r.keyword)}</code></td><td>→ ${esc(cat(r.categoryId)?.name || '—')}</td><td class="num"><button class="icon" data-rule-del="${r.id}" aria-label="Supprimer">✕</button></td></tr>`).join('')}</tbody></table>` : '<div class="muted" style="font-size:14px">Aucune règle.</div>';
