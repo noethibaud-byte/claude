@@ -89,6 +89,7 @@ input, select { font: inherit; font-size: 17px; color: var(--text); }
 .item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 16px; background: none; border: 0; text-align: left; cursor: pointer; position: relative; }
 .item + .item::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; border-top: 1px solid var(--border); }
 .item:active { background: var(--surface-2); }
+a.item { color: inherit; }
 .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .item-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-sub { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -782,7 +783,7 @@ function renderSettings() {
   const item = (action, title, sub = '', right = '', id = '') => `<button class="item" data-action="${action}"${id ? ` data-id="${id}"` : ''} style="min-height:52px"><span class="item-main"><span class="item-title" style="white-space:normal">${title}</span>${sub ? `<span class="item-sub">${sub}</span>` : ''}</span>${right}<span class="chev">›</span></button>`;
   $('#view-settings').innerHTML = `
     <div class="section-title"><span>Finary</span></div>
-    <div class="list">${item('finary', state.finarySyncedAt ? 'Mettre à jour depuis Finary' : 'Importer mes comptes Finary', state.finarySyncedAt ? `${fin} compte(s) relié(s) · ${new Date(state.finarySyncedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : 'Comptes et soldes, en lecture seule')}</div>
+    <div class="list">${item('finary', state.finarySyncedAt ? 'Mettre à jour depuis Finary' : 'Importer mes comptes Finary', state.finarySyncedAt ? `${fin} compte(s) relié(s) · soldes du ${new Date(state.finarySyncedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : 'Comptes et soldes, en lecture seule')}${window.claude?.use ? item('finaryCode', 'Copier mes soldes Finary', 'Pour les mettre à jour sur le site GitHub') : ''}</div>
     <div class="section-title"><span>Comptes</span></div>
     <div class="list">${state.accounts.map(a => item('editAccount', esc(a.name), KINDS.find(k => k[0] === accountKind(a))[1] + (a.finaryId ? ' · Finary' : ''), `<span class="item-amt">${fmt(accountBalance(a))}</span>`, a.id)).join('')}${item('addAccount', '<span style="color:var(--accent)">Ajouter un compte</span>')}</div>
     <div class="section-title"><span>Catégories</span></div>
@@ -1107,50 +1108,109 @@ function demoState() {
 }
 
 // ---- Finary (comptes et soldes, en lecture seule) ----
+// Finary n'est joignable que depuis la version Claude de l'application (connecteur Finary de votre compte).
+// Le site GitHub reçoit les soldes par un code copié depuis la version Claude puis collé ici.
+const CLAUDE_APP_URL = 'https://claude.ai/artifact/UcX9jqLVWET1Nv6ErQvc2h';
 let finaryBusy = false;
+const finaryAvailable = async () => (window.claude?.use ? await window.claude.use('mcp') : null);
+async function fetchFinary(mcp) {
+  const res = await mcp.callTool('Finary', 'accounts', {}, { cache: false });
+  const p = res.payload || {};
+  const rows = Array.isArray(p.data) ? p.data : [];
+  const inc = Array.isArray(p.included) ? p.included : [];
+  const instName = row => {
+    const conn = inc.find(i => i.type === 'institution-connections' && i.id === row.relationships?.institution_connection?.data?.id);
+    return inc.find(i => i.type === 'institutions' && i.id === conn?.relationships?.institution?.data?.id)?.attributes?.name || '';
+  };
+  return rows.filter(r => r.attributes && !['loan', 'credit'].includes(r.attributes.account_type)).map(r => {
+    const at = r.attributes, inst = instName(r);
+    return { id: r.id, name: inst && !at.name.toLowerCase().includes(inst.toLowerCase()) ? `${at.name} (${inst})` : at.name, type: at.account_type, balance: at.currency === 'EUR' ? parseFloat(at.balance) : parseFloat(at.full_value_eur) };
+  });
+}
+function applyFinary(list, at = new Date().toISOString()) {
+  if (!list.length) return null;
+  // Au premier import, on retire le compte par défaut s'il est vide.
+  if (!state.accounts.some(a => a.finaryId) && state.accounts.length === 1) {
+    const a0 = state.accounts[0];
+    if (!a0.initial && !state.transactions.some(t => t.accountId === a0.id || t.toAccountId === a0.id)) state.accounts = [];
+  }
+  let added = 0, updated = 0, skipped = 0;
+  for (const f of list) {
+    if (!isFinite(f.balance)) { skipped++; continue; }
+    let a = state.accounts.find(x => x.finaryId === f.id);
+    if (!a) { a = { id: uid(), name: f.name, initial: 0, finaryId: f.id }; state.accounts.push(a); added++; } else updated++;
+    a.finaryType = f.type;
+    a.initial = 0;
+    a.initial = round2(f.balance - accountBalance(a));
+  }
+  if (!state.accounts.length) state.accounts.push({ id: uid(), name: 'Compte courant', initial: 0 });
+  state.finarySyncedAt = at;
+  save(); render();
+  return `Finary : ${added} compte(s) ajouté(s), ${updated} mis à jour${skipped ? `, ${skipped} sans solde` : ''}`;
+}
+const finaryError = e => e?.code === 'server_not_connected' ? 'Finary n\'est pas connecté à votre compte Claude' : e?.code === 'denied' || e?.code === 'not_granted' ? 'Accès à Finary refusé' : 'Finary ne répond pas, réessayez plus tard';
 async function syncFinary(silent = false) {
   if (finaryBusy) return;
-  const mcp = window.claude?.use ? await window.claude.use('mcp') : null;
-  if (!mcp) { if (!silent) toast('Ouvrez l\'application depuis claude.ai pour la relier à Finary'); return; }
+  const mcp = await finaryAvailable();
+  if (!mcp) { if (!silent) finaryPasteSheet(); return; }
   finaryBusy = true; if (!silent) toast('Connexion à Finary…');
   try {
-    const res = await mcp.callTool('Finary', 'accounts', {}, { cache: false });
-    const p = res.payload || {};
-    const rows = Array.isArray(p.data) ? p.data : [];
-    const inc = Array.isArray(p.included) ? p.included : [];
-    const instName = row => {
-      const conn = inc.find(i => i.type === 'institution-connections' && i.id === row.relationships?.institution_connection?.data?.id);
-      return inc.find(i => i.type === 'institutions' && i.id === conn?.relationships?.institution?.data?.id)?.attributes?.name || '';
-    };
-    const usable = rows.filter(r => r.attributes && !['loan', 'credit'].includes(r.attributes.account_type));
-    if (!usable.length) { if (!silent) toast('Aucun compte trouvé dans Finary'); return; }
-    // Au premier import, on retire le compte par défaut s'il est vide.
-    if (!state.accounts.some(a => a.finaryId) && state.accounts.length === 1) {
-      const a0 = state.accounts[0];
-      if (!a0.initial && !state.transactions.some(t => t.accountId === a0.id || t.toAccountId === a0.id)) state.accounts = [];
+    const msg = applyFinary(await fetchFinary(mcp));
+    if (!silent) toast(msg || 'Aucun compte trouvé dans Finary');
+  } catch (e) { if (!silent) toast(finaryError(e)); }
+  finally { finaryBusy = false; }
+}
+const encodeCode = obj => 'MF1:' + btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+function decodeCode(text) {
+  const m = String(text).match(/MF1:([A-Za-z0-9+/=]+)/);
+  if (!m) return null;
+  try { const o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return Array.isArray(o.accounts) ? o : null; } catch { return null; }
+}
+async function copyText(text, el) {
+  try { await navigator.clipboard.writeText(text); toast('Code copié'); return true; }
+  catch { el?.focus(); el?.select(); toast('Sélectionnez le code puis copiez-le'); return false; }
+}
+// Version Claude : récupère les soldes et affiche le code à coller sur le site GitHub.
+async function finaryCodeSheet() {
+  const mcp = await finaryAvailable();
+  if (!mcp) return finaryPasteSheet();
+  toast('Connexion à Finary…');
+  let list;
+  try { list = await fetchFinary(mcp); } catch (e) { return toast(finaryError(e)); }
+  applyFinary(list);
+  const code = encodeCode({ at: new Date().toISOString(), accounts: list });
+  $('#toast').classList.remove('show');
+  openSheet('Soldes pour le site', `
+    <div class="card"><b>${list.length} compte(s) Finary</b><div class="label">Soldes du ${new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</div></div>
+    <button class="btn primary block" id="fcCopy">Copier le code</button>
+    <textarea id="fcCode" readonly rows="4" style="width:100%;border:0;border-radius:14px;background:var(--surface);color:var(--muted);padding:12px;font:13px/1.4 ui-monospace,monospace;word-break:break-all">${code}</textarea>
+    <p class="hint">Ouvrez ensuite le site GitHub : Réglages → Importer mes comptes Finary → Coller le code.</p>`, {
+    onMount(sh) { $('#fcCopy', sh).onclick = () => copyText(code, $('#fcCode', sh)); }
+  });
+}
+// Site GitHub : colle le code copié depuis la version Claude.
+function finaryPasteSheet() {
+  openSheet('Comptes Finary', `
+    <p class="hint" style="margin:0">Finary n'est accessible que depuis la version Claude de l'application. Pour mettre à jour vos soldes ici :</p>
+    <div class="list">
+      <a class="item" href="${CLAUDE_APP_URL}" target="_blank" rel="noopener" style="text-decoration:none"><span class="avatar" style="--c:var(--accent)">1</span><span class="item-main"><span class="item-title">Ouvrir la version Claude</span><span class="item-sub">Réglages → Copier mes soldes Finary</span></span><span class="chev">›</span></a>
+      <div class="item" style="cursor:default"><span class="avatar" style="--c:var(--accent)">2</span><span class="item-main"><span class="item-title">Revenir ici et coller le code</span><span class="item-sub">Le code commence par MF1:</span></span></div>
+    </div>
+    <button class="btn primary block" id="fpPaste">Coller le code</button>
+    <textarea id="fpCode" rows="3" placeholder="…ou collez le code ici" style="width:100%;border:0;border-radius:14px;background:var(--surface);padding:12px;font:15px/1.4 var(--font)"></textarea>`, {
+    okLabel: 'Importer',
+    onMount(sh) {
+      $('#fpPaste', sh).onclick = async () => {
+        try { $('#fpCode', sh).value = await navigator.clipboard.readText(); $('#sheetOk').click(); }
+        catch { $('#fpCode', sh).focus(); toast('Touchez le champ puis « Coller »'); }
+      };
+    },
+    onOk(sh) {
+      const data = decodeCode($('#fpCode', sh).value);
+      if (!data) { toast('Code invalide : recopiez-le depuis la version Claude'); return false; }
+      toast(applyFinary(data.accounts, data.at) || 'Aucun compte dans ce code');
     }
-    let added = 0, updated = 0, skipped = 0;
-    for (const r of usable) {
-      const at = r.attributes;
-      const bal = at.currency === 'EUR' ? parseFloat(at.balance) : parseFloat(at.full_value_eur);
-      if (!isFinite(bal)) { skipped++; continue; }
-      let a = state.accounts.find(x => x.finaryId === r.id);
-      if (!a) {
-        const inst = instName(r);
-        a = { id: uid(), name: inst && !at.name.toLowerCase().includes(inst.toLowerCase()) ? `${at.name} (${inst})` : at.name, initial: 0, finaryId: r.id };
-        state.accounts.push(a); added++;
-      } else updated++;
-      a.finaryType = at.account_type;
-      a.initial = 0;
-      a.initial = round2(bal - accountBalance(a));
-    }
-    if (!state.accounts.length) state.accounts.push({ id: uid(), name: 'Compte courant', initial: 0 });
-    state.finarySyncedAt = new Date().toISOString();
-    save(); render();
-    if (!silent) toast(`Finary : ${added} compte(s) ajouté(s), ${updated} mis à jour${skipped ? `, ${skipped} sans solde` : ''}`);
-  } catch (e) {
-    if (!silent) toast(e?.code === 'server_not_connected' ? 'Finary n\'est pas connecté à votre compte Claude' : e?.code === 'denied' || e?.code === 'not_granted' ? 'Accès à Finary refusé' : 'Finary ne répond pas, réessayez plus tard');
-  } finally { finaryBusy = false; }
+  });
 }
 
 // ---- Actions (un seul gestionnaire de clics pour toute l'application) ----
@@ -1174,6 +1234,7 @@ const actions = {
   addRule: () => ruleSheet(),
   editRule: id => ruleSheet(id),
   finary: () => syncFinary(),
+  finaryCode: () => finaryCodeSheet(),
   importCsv: () => $('#fileCsv').click(),
   importJson: () => $('#fileJson').click(),
   exportCsv,
