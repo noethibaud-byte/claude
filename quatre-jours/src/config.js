@@ -20,6 +20,8 @@ export function loadConfig(env = process.env) {
     featuredPriceCents: int(env.FEATURED_PRICE_CENTS, 4900),
     jobDurationDays: int(env.JOB_DURATION_DAYS, 30),
     autoPublishPaid: env.AUTO_PUBLISH_PAID === 'true',
+    // Import quotidien et email du lundi lancés par le serveur lui-même (activé par défaut en production).
+    scheduler: env.SCHEDULER ? env.SCHEDULER === 'true' : production,
 
     stripeSecretKey: env.STRIPE_SECRET_KEY || '',
     stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
@@ -45,8 +47,8 @@ export function loadConfig(env = process.env) {
     if (!config.secret) missing.push('SECRET');
     if (!config.adminPassword) missing.push('ADMIN_PASSWORD');
     if (!env.BASE_URL) missing.push('BASE_URL');
-    if (!config.stripeSecretKey) missing.push('STRIPE_SECRET_KEY');
-    if (!config.stripeWebhookSecret) missing.push('STRIPE_WEBHOOK_SECRET');
+    // Stripe peut être branché plus tard : la publication d'offres reste fermée en attendant.
+    if (config.stripeSecretKey && !config.stripeWebhookSecret) missing.push('STRIPE_WEBHOOK_SECRET');
     if (missing.length) {
       throw new Error(`Variables d'environnement manquantes en production : ${missing.join(', ')}`);
     }
@@ -54,7 +56,7 @@ export function loadConfig(env = process.env) {
   return config;
 }
 
-// Sans clé Stripe (développement uniquement), les offres sont considérées comme payées.
+// Sans clé Stripe : paiement simulé en développement, publication fermée en production.
 export function paymentsEnabled(config) {
   return Boolean(config.stripeSecretKey);
 }

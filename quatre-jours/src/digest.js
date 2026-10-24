@@ -29,3 +29,23 @@ export function buildDigest({ config, jobs, subscriber }) {
     headers: { 'List-Unsubscribe': `<${unsubscribe}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
   };
 }
+
+export async function sendDigest({ db, mailer, config, log = console.log }) {
+  const jobs = db.publishedSince(7);
+  const subscribers = db.activeSubscribers();
+  if (!jobs.length) {
+    log('Aucune nouvelle offre cette semaine : pas d’envoi.');
+    return { sent: 0, subscribers: subscribers.length, jobs: 0 };
+  }
+  let sent = 0;
+  for (const sub of subscribers) {
+    try {
+      await mailer.send(buildDigest({ config, jobs, subscriber: sub }));
+      sent++;
+    } catch (err) {
+      log(`Échec pour ${sub.email} : ${err.message}`);
+    }
+  }
+  log(`Email envoyé à ${sent} abonné(s) sur ${subscribers.length}, ${jobs.length} offre(s).`);
+  return { sent, subscribers: subscribers.length, jobs: jobs.length };
+}

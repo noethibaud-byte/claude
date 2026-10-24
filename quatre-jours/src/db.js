@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE UNIQUE INDEX IF NOT EXISTS jobs_external ON jobs(source, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS jobs_status ON jobs(status, featured, published_at);
 
+CREATE TABLE IF NOT EXISTS meta (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
 CREATE TABLE IF NOT EXISTS subscribers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,
@@ -241,6 +246,13 @@ export function openDb(path) {
     },
     activeSubscribers() {
       return stmt(`SELECT * FROM subscribers WHERE confirmed_at IS NOT NULL AND unsubscribed_at IS NULL`).all();
+    },
+
+    getMeta(key) {
+      return stmt('SELECT value FROM meta WHERE key = ?').get(key)?.value ?? null;
+    },
+    setMeta(key, value) {
+      stmt('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
     },
 
     close() {

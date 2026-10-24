@@ -199,9 +199,21 @@ export function createApp({ db, config, mailer, fetchImpl = fetch, log = console
   // ---------- Recruteurs ----------
   const postLimiter = rateLimiter({ max: 10, windowMs: 10 * 60 * 1000 });
 
-  app.get('/publier', (req, res) => send(res, postPage({ config, values: { contract: 'CDI', remote: 'non' } })));
+  // En production sans Stripe, la publication reste fermée : jamais d'offre gratuite par erreur.
+  const postingOpen = paymentsEnabled(config) || !config.production;
+  function requirePostingOpen(req, res, next) {
+    if (postingOpen) return next();
+    send(res, messagePage({
+      config,
+      title: 'La publication d’offres ouvre bientôt',
+      text: `Vous recrutez en semaine de 4 jours ? Écrivez-nous à ${config.legal.email} pour être prévenu de l’ouverture.`,
+      link: { href: '/', label: 'Voir les offres' },
+    }), 503);
+  }
 
-  app.post('/publier', postLimiter, async (req, res, next) => {
+  app.get('/publier', requirePostingOpen, (req, res) => send(res, postPage({ config, values: { contract: 'CDI', remote: 'non' } })));
+
+  app.post('/publier', requirePostingOpen, postLimiter, async (req, res, next) => {
     try {
       if (str(req.body.website)) return res.redirect(303, '/'); // pot de miel anti-robots
       const { values, errors, job } = validateJob(req.body);
@@ -244,7 +256,7 @@ export function createApp({ db, config, mailer, fetchImpl = fetch, log = console
     send(res, managePage({ config, job, paymentsOn: paymentsEnabled(config) }));
   });
 
-  app.post('/offre/gerer/:token/payer', async (req, res, next) => {
+  app.post('/offre/gerer/:token/payer', requirePostingOpen, async (req, res, next) => {
     try {
       const job = db.getJobByManageToken(req.params.token);
       if (!job) return notFound(res);
@@ -352,6 +364,7 @@ export function createApp({ db, config, mailer, fetchImpl = fetch, log = console
   });
 
   // ---------- Pages fixes et référencement ----------
+  app.get('/healthz', (req, res) => res.type('text/plain').send('ok'));
   app.get('/mentions-legales', (req, res) => send(res, mentionsPage(config)));
   app.get('/confidentialite', (req, res) => send(res, privacyPage(config)));
   app.get('/cgv', (req, res) => send(res, cgvPage(config)));

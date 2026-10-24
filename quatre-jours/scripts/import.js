@@ -1,5 +1,5 @@
 // Import quotidien des offres France Travail, puis expiration des offres périmées.
-// À lancer chaque matin (cron ou tâche planifiée de l'hébergeur) : npm run import
+// Import manuel (le serveur le lance déjà seul chaque matin) : npm run import
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import { importFranceTravail } from '../src/importers/francetravail.js';

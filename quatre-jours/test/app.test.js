@@ -123,3 +123,16 @@ test('la production refuse de démarrer sans configuration', async () => {
   const { loadConfig } = await import('../src/config.js');
   assert.throws(() => loadConfig({ NODE_ENV: 'production' }), /SECRET.*ADMIN_PASSWORD/);
 });
+
+test('en production sans Stripe, la publication est fermée', async () => {
+  const t = await startApp({ NODE_ENV: 'production', SECRET: 's', ADMIN_PASSWORD: 'p', BASE_URL: 'https://exemple.fr', SCHEDULER: 'false' });
+  try {
+    assert.equal((await t.get('/')).status, 200);
+    assert.equal((await t.get('/healthz')).status, 200);
+    assert.equal((await t.get('/publier')).status, 503);
+    assert.equal((await t.post('/publier', validJob)).status, 503);
+    assert.equal(t.db.listByStatus('pending_review').length, 0);
+  } finally {
+    await t.close();
+  }
+});

@@ -6,7 +6,7 @@ RUN npm ci --omit=dev
 COPY src ./src
 COPY scripts ./scripts
 COPY public ./public
-# La base SQLite doit être sur un volume persistant monté sur /app/data
-VOLUME /app/data
+# La base SQLite doit être sur un disque persistant monté sur /app/data (volume de l'hébergeur).
+RUN mkdir -p /app/data
 EXPOSE 3000
 CMD ["node", "--disable-warning=ExperimentalWarning", "src/server.js"]
