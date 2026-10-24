@@ -134,7 +134,7 @@ input, select { font: inherit; font-size: 17px; color: var(--text); }
 /* ---- panneaux (bottom sheets) ---- */
 .backdrop { position: fixed; inset: 0; z-index: 50; background: var(--backdrop); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 560px; max-height: calc(100% - env(safe-area-inset-top, 0px) - 16px); overflow-y: auto; overscroll-behavior: contain; background: var(--bg); border-radius: 22px 22px 0 0; padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); animation: up .22s ease-out; }
-@keyframes up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes up { from { transform: translateY(40px); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet-head { position: sticky; top: 0; z-index: 1; background: var(--bg); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 8px 0 10px; }
 .sheet-head::before { content: ""; position: absolute; top: 6px; left: 50%; width: 38px; height: 5px; border-radius: 3px; background: var(--border); transform: translateX(-50%); }
@@ -209,7 +209,7 @@ svg text { fill: var(--muted); font-family: var(--font); }
 <div class="dialog-bg hidden" id="dialogBg"><div class="dialog" role="alertdialog" aria-modal="true"><p id="dialogMsg"></p><button id="dialogYes" class="destructive"></button><button id="dialogNo"></button></div></div>
 <div class="toast" id="toast" role="status"></div>
 <input type="file" id="fileJson" accept=".json,application/json" hidden>
-<input type="file" id="fileCsv" accept=".csv,text/csv" hidden>
+<input type="file" id="fileCsv" accept=".pdf,.csv,application/pdf,text/csv" hidden>
 
 <script>
 (() => {
@@ -553,7 +553,8 @@ function renderOps() {
   $('#view-ops').innerHTML = `${monthBar()}
     <div class="seg" id="opsType">${[['all', 'Tout'], ['depense', 'Dépenses'], ['revenu', 'Revenus']].map(([v, l]) => `<button data-action="opsType" data-id="${v}" class="${opsFilter.type === v ? 'on' : ''}">${l}</button>`).join('')}</div>
     <input type="search" id="opsSearch" placeholder="Rechercher" value="${esc(opsFilter.q)}" style="width:100%;min-height:44px;border:0;border-radius:12px;background:var(--surface);padding:0 14px" aria-label="Rechercher une opération">
-    <div id="opsList"></div>`;
+    <div id="opsList"></div>
+    <button class="btn block" data-action="importCsv">Importer un relevé (PDF ou CSV)</button>`;
   renderOpsList();
 }
 function renderOpsList() {
@@ -782,7 +783,7 @@ function renderSettings() {
     <div class="list">${state.rules.map(r => item('editRule', esc(r.keyword), `→ ${esc(cat(r.categoryId)?.name || '—')}`, '', r.id)).join('')}${item('addRule', '<span style="color:var(--accent)">Ajouter une règle</span>', 'Ex. « CARREFOUR » → Alimentation, pour l\'import CSV')}</div>
     <div class="section-title"><span>Données</span></div>
     <div class="list">
-      ${item('importCsv', 'Importer un relevé bancaire (CSV)', 'Colonnes date ; libellé ; montant')}
+      ${item('importCsv', 'Importer un relevé bancaire', 'PDF BoursoBank ou fichier CSV')}
       ${item('exportCsv', 'Exporter les opérations (CSV)')}
       ${item('exportJson', 'Exporter une sauvegarde')}
       ${item('importJson', 'Restaurer une sauvegarde')}
@@ -927,27 +928,137 @@ function parseAmount(s) {
   if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, '');
   const n = parseFloat(s); return isNaN(n) ? null : n;
 }
+// Classement automatique : d'abord vos règles, puis des enseignes courantes.
+const BUILTIN_RULES = [
+  ['Alimentation', /\b(ALDI|AUCHAN|HYPER U|SUPER U|U EXPRESS|CARREFOUR|LIDL|LECLERC|INTERMARCHE|CASINO|MONOPRIX|FRANPRIX|PICARD|BIOCOOP|NETTO|SPAR|GRAND FRAIS|BOULANGERIE)\b/],
+  ['Transport', /\b(TOTAL|ESSO|SHELL|AVIA|SNCF|TCL|PK|PARKING|PEAGE|APRR|AREA|VINCI|UBER|BLABLACAR|STATION)\b/],
+  ['Loisirs', /\b(MC ?DO\w*|MAC ?DO\w*|BURGER KING|KFC|QUICK|RESTAU\w*|PUB|BAR|CAFE|BOWLING|CINEMA|PATHE|UGC|BRASSERIE|PIZZ\w*|KEBAB|SUSHI)\b/],
+  ['Shopping', /\b(MANGO|SHEIN|ACTION|ZARA|H&M|AMAZON|DECATHLON|FNAC|PRIMARK|KIABI|IKEA|CELIO|JULES|SEPHORA|BARBER|COIFF\w*)\b/],
+  ['Abonnements', /\b(NETFLIX|SPOTIFY|DEEZER|DISNEY|FREE MOBILE|ORANGE|SFR|BOUYGUES|APPLE\.COM|CANAL|PRIME VIDEO|YOUTUBE)\b/],
+  ['Santé', /\b(PHARMACIE|PHIE|DOCTOLIB|MEDECIN|DENTISTE|OPTIC\w*|LABORATOIRE)\b/],
+];
 function autoCategory(note, type) {
   const up = note.toUpperCase();
   const r = state.rules.find(r => up.includes(r.keyword.toUpperCase()) && cat(r.categoryId)?.type === type);
   if (r) return r.categoryId;
-  return type === 'revenu' ? catsOf('revenu')[0]?.id : fallbackCatId();
+  if (type === 'depense') for (const [name, re] of BUILTIN_RULES) { const c = state.categories.find(c => c.type === 'depense' && c.name === name); if (c && re.test(up)) return c.id; }
+  return type === 'revenu' ? (catsOf('revenu').find(c => c.name === 'Autres revenus') || catsOf('revenu')[0])?.id : fallbackCatId();
 }
-$('#fileCsv').onchange = async e => {
-  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  const text = (await file.text()).replace(/^﻿/, '');
-  let n = 0, skipped = 0;
-  for (const r of parseCsv(text)) {
+function readCsvStatement(text) {
+  const out = []; let skipped = 0;
+  for (const r of parseCsv(text.replace(/^﻿/, ''))) {
     if (r.length < 3) { skipped++; continue; }
-    const date = parseDate(r[0]), amount = parseAmount(r[r.length - 1]), note = r.slice(1, -1).join(' ').trim();
+    const date = parseDate(r[0]), amount = parseAmount(r[r.length - 1]), note = r.slice(1, -1).join(' ').replace(/\s+/g, ' ').trim();
     if (!date || amount === null || amount === 0) { skipped++; continue; }
-    const type = amount > 0 ? 'revenu' : 'depense';
-    state.transactions.push({ id: uid(), created: Date.now(), date, amount: round2(Math.abs(amount)), type, note, accountId: state.accounts[0].id, categoryId: autoCategory(note, type), toAccountId: null });
-    n++;
+    out.push({ date, amount: round2(Math.abs(amount)), type: amount > 0 ? 'revenu' : 'depense', note });
   }
-  save(); render();
-  toast(`${n} opération(s) importée(s)${skipped ? `, ${skipped} ligne(s) ignorée(s)` : ''}`);
-};
+  return { rows: out, skipped, text };
+}
+// Lecture d'un relevé PDF (BoursoBank et relevés au format « Date · Libellé · Débit · Crédit »).
+function loadScript(src) {
+  return new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = rej; document.head.appendChild(el); });
+}
+async function pdfLib() {
+  if (!window.pdfjsLib) {
+    const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    await loadScript(base + 'pdf.min.js');
+    await loadScript(base + 'pdf.worker.min.js'); // exécuté dans la page : pas besoin de worker séparé
+  }
+  return window.pdfjsLib;
+}
+async function readPdfStatement(buf) {
+  const lib = await pdfLib();
+  const doc = await lib.getDocument({ data: buf, isEvalSupported: false }).promise;
+  const AMOUNT = /^-?\d{1,3}(?:[ .  ]\d{3})*,\d{2}$/, DATE = /^\d{2}\/\d{2}\/\d{4}$/;
+  const rows = []; let allText = '', skipped = 0;
+  for (let n = 1; n <= doc.numPages; n++) {
+    const page = await doc.getPage(n);
+    const items = (await page.getTextContent()).items.filter(i => i.str.trim()).map(i => ({ s: i.str.trim(), x: i.transform[4], r: i.transform[4] + i.width, y: Math.round(i.transform[5]) }));
+    allText += items.map(i => i.s).join(' ') + '\n';
+    const debit = items.find(i => /^D[ée]bit$/i.test(i.s)), credit = items.find(i => /^Cr[ée]dit$/i.test(i.s));
+    if (!debit || !credit) continue;
+    const headY = Math.max(debit.y, credit.y);
+    const footY = Math.max(-1, ...items.filter(i => /^(A réception|Nouveau solde)/i.test(i.s)).map(i => i.y));
+    // Regroupe les morceaux de texte par ligne (même hauteur à 2 points près).
+    const lines = [];
+    for (const it of items.filter(i => i.y < headY && i.y > footY).sort((a, b) => b.y - a.y || a.x - b.x)) {
+      const l = lines.find(l => Math.abs(l.y - it.y) <= 2);
+      if (l) l.items.push(it); else lines.push({ y: it.y, items: [it] });
+    }
+    lines.sort((a, b) => b.y - a.y).forEach(l => l.items.sort((a, b) => a.x - b.x));
+    let last = null;
+    for (const l of lines) {
+      const first = l.items[0];
+      const amounts = l.items.filter(i => AMOUNT.test(i.s) && i.x > debit.x - 120);
+      if (DATE.test(first.s) && amounts.length) {
+        const amt = amounts.at(-1), value = parseAmount(amt.s);
+        const isCredit = Math.abs(amt.r - credit.r) < Math.abs(amt.r - debit.r);
+        const labelParts = l.items.filter(i => i !== first && !amounts.includes(i) && !(DATE.test(i.s) && i.x > debit.x - 200));
+        let note = labelParts.map(i => i.s).join(' ').replace(/\s+/g, ' ').trim(), date = parseDate(first.s);
+        const card = note.match(/^CARTE (\d{2})\/(\d{2})\/(\d{2}) (.*)$/);
+        if (card) { date = `20${card[3]}-${card[2]}-${card[1]}`; note = card[4]; }
+        note = note.replace(/\s*CB\*\d{4}\s*$/, '').replace(/\s+\d$/, '').trim();
+        if (!value) { skipped++; last = null; continue; }
+        last = { date, amount: round2(Math.abs(value)), type: isCredit ? 'revenu' : 'depense', note };
+        rows.push(last);
+      } else if (last && !DATE.test(first.s) && /^(VIR|PRLV|REJ)/.test(last.note) && !/^R[èé]f/i.test(first.s) && !last.extra) {
+        last.extra = true; last.note += ' · ' + l.items.map(i => i.s).join(' ').replace(/\s+/g, ' ').trim();
+      }
+    }
+  }
+  rows.forEach(r => delete r.extra);
+  return { rows, skipped, text: allText };
+}
+async function importStatement(file) {
+  const isPdf = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+  toast('Lecture du relevé…');
+  let res;
+  try { res = isPdf ? await readPdfStatement(await file.arrayBuffer()) : readCsvStatement(await file.text()); }
+  catch { return toast(isPdf ? 'Impossible de lire ce PDF. Essayez avec un export CSV de votre banque.' : 'Fichier illisible'); }
+  if (!res.rows.length) return toast('Aucune opération trouvée dans ce fichier');
+  $('#toast').classList.remove('show');
+  // Compte proposé : celui dont le nom apparaît dans le relevé, sinon le premier compte courant.
+  const up = res.text.toUpperCase();
+  const guess = state.accounts.find(a => { const n = a.name.replace(/\s*\(.*\)\s*$/, '').trim().toUpperCase(); return n.length > 3 && up.includes(n); })
+    || state.accounts.find(a => accountKind(a) === 'courant') || state.accounts[0];
+  const rows = res.rows.map(r => ({ ...r, categoryId: autoCategory(r.note, r.type) }));
+  const key = (t, accountId) => `${accountId}|${t.date}|${t.type}|${t.amount}|${(t.note || '').toUpperCase()}`;
+  const inc = rows.filter(r => r.type === 'revenu').reduce((s, r) => s + r.amount, 0), exp = rows.filter(r => r.type === 'depense').reduce((s, r) => s + r.amount, 0);
+  const dates = rows.map(r => r.date).sort();
+  const unclassified = rows.filter(r => r.type === 'depense' && r.categoryId === fallbackCatId()).length;
+  openSheet('Importer le relevé', `
+    <div class="card">
+      <div class="mid">${rows.length} opérations</div>
+      <div class="label">du ${new Date(dates[0] + 'T00:00').toLocaleDateString('fr-FR')} au ${new Date(dates.at(-1) + 'T00:00').toLocaleDateString('fr-FR')}</div>
+      <div class="split"><div><div class="label">Entrées</div><div class="mid pos" style="font-size:19px">+${fmt(inc)}</div></div><div><div class="label">Sorties</div><div class="mid" style="font-size:19px">−${fmt(exp)}</div></div></div>
+    </div>
+    <div class="form"><label class="field"><span>Sur le compte</span><select id="impAcc">${state.accounts.map(a => `<option value="${a.id}" ${a.id === guess.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label></div>
+    <p class="hint" id="impDup"></p>
+    ${unclassified ? `<p class="hint">${unclassified} dépense(s) n'ont pas pu être classées : elles iront dans « À classer ». Touchez-les ensuite dans Opérations pour choisir leur catégorie.</p>` : ''}
+    <div class="section-title"><span>Aperçu</span></div>
+    <div class="list">${rows.slice(0, 40).map(r => { const c = cat(r.categoryId); return `<div class="item" style="cursor:default">${avatar(c)}<span class="item-main"><span class="item-title">${esc(r.note)}</span><span class="item-sub">${new Date(r.date + 'T00:00').toLocaleDateString('fr-FR')} · ${esc(c?.name || '—')}</span></span><span class="item-amt ${r.type === 'revenu' ? 'pos' : ''}">${r.type === 'revenu' ? '+' : '−'}${fmt(r.amount)}</span></div>`; }).join('')}${rows.length > 40 ? `<div class="empty">… et ${rows.length - 40} autres</div>` : ''}</div>`, {
+    okLabel: 'Importer',
+    onMount(sh) {
+      const upd = () => {
+        const accId = $('#impAcc', sh).value, existing = new Set(state.transactions.map(t => key(t, t.accountId)));
+        const d = rows.filter(r => existing.has(key(r, accId))).length;
+        $('#impDup', sh).textContent = d ? `${d} opération(s) déjà présente(s) sur ce compte seront ignorées.` : '';
+      };
+      $('#impAcc', sh).onchange = upd; upd();
+    },
+    onOk(sh) {
+      const accountId = $('#impAcc', sh).value, a = acc(accountId);
+      const existing = new Set(state.transactions.map(t => key(t, t.accountId)));
+      const fresh = rows.filter(r => !existing.has(key(r, accountId)));
+      for (const r of fresh) state.transactions.push({ id: uid(), created: Date.now(), date: r.date, amount: r.amount, type: r.type, note: r.note, accountId, categoryId: r.categoryId, toAccountId: null, imported: true });
+      // Le solde d'un compte relié à Finary reste celui de Finary.
+      if (a?.finaryId) a.initial = round2(a.initial - fresh.reduce((s, r) => s + signed(r), 0));
+      save(); month = monthKey(dates.at(-1)); show('ops');
+      toast(`${fresh.length} opération(s) importée(s)${rows.length - fresh.length ? `, ${rows.length - fresh.length} déjà présente(s)` : ''}${res.skipped ? `, ${res.skipped} ligne(s) ignorée(s)` : ''}`);
+    }
+  });
+}
+$('#fileCsv').onchange = e => { const file = e.target.files[0]; e.target.value = ''; if (file) importStatement(file); };
 $('#fileJson').onchange = async e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file) return;
   try {
