@@ -13,6 +13,10 @@
    et masque le contenu qui défile derrière la barre d'état. */
 .app { padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important; }
 body::before { content: ""; position: fixed; z-index: 45; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); }
+/* Chaque page occupe au moins tout l'écran : sinon, sur une page courte, iOS décale la barre d'onglets
+   et le bouton + vers le haut. */
+html { min-height: 100%; }
+body, .app { min-height: 100vh; min-height: 100lvh; }
 </style>
 <style>
 /* Mise en page : application mobile (iPhone) — grand titre, contenu en cartes, barre d'onglets fixe en bas, panneaux qui montent du bas. */
