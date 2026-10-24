@@ -8,11 +8,13 @@ Ouvrez `index.html` dans un navigateur. Les données sont enregistrées dans le 
 
 ## Fonctionnalités
 
-- **Tableau de bord** : revenus, dépenses, solde et taux d'épargne du mois, patrimoine total, graphique sur 6 mois, répartition des dépenses par catégorie, suivi des budgets.
-- **Transactions** : dépenses, revenus et virements entre comptes, opérations récurrentes mensuelles, modification, suppression, filtres et recherche.
-- **Budgets** : plafond mensuel par catégorie, avec alerte en cas de dépassement.
+Interface pensée pour l'iPhone : barre d'onglets en bas, bouton + pour saisir une opération, panneaux qui montent du bas.
+
+- **Accueil** : solde, revenus, dépenses et taux d'épargne du mois, reste à dépenser, comptes, dernières opérations, graphiques.
+- **Opérations** : dépenses, revenus et virements entre comptes, regroupés par jour, opérations mensuelles récurrentes, recherche.
+- **Budgets** : plafond mensuel par catégorie, reste à dépenser et montant disponible par jour, rythme de dépense (repère du jour sur chaque barre), budgets proposés à partir de la moyenne des 3 derniers mois.
 - **Objectifs d'épargne** : montant cible, échéance et effort mensuel conseillé.
-- **Paramètres** : comptes, catégories, règles de classement automatique, thème clair ou sombre.
+- **Réglages** : comptes (dont l'import des comptes et soldes Finary), catégories, règles de classement automatique, thème clair ou sombre.
 - **Sauvegarde** : export et restauration en JSON, export CSV, import de relevés bancaires CSV.
 
 Pensez à exporter une sauvegarde régulièrement : vider les données du navigateur efface aussi vos finances.
