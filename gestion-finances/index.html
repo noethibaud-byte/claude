@@ -408,6 +408,20 @@ function budgetStatus(spent, budget, progress) {
 }
 const STATUS_LABEL = { ok: 'Dans le rythme', fast: 'Rythme élevé', full: 'Atteint', over: 'Dépassé' };
 const STATUS_COLOR = { ok: 'var(--pos)', fast: 'var(--warn)', full: 'var(--muted)', over: 'var(--neg)' };
+// Regroupement des comptes : courant, épargne, placements.
+const KINDS = [['courant', 'Comptes courants'], ['epargne', 'Épargne'], ['placement', 'Placements']];
+const FINARY_KIND = { checking: 'courant', saving: 'epargne', investment: 'placement', crypto: 'placement', 'real-estate': 'placement', startup: 'placement' };
+function accountKind(a) {
+  if (a.kind) return a.kind;
+  if (a.finaryType) return FINARY_KIND[a.finaryType] || 'placement';
+  return /livret|ldds|lep|pel|cel|[ée]pargne/i.test(a.name) ? 'epargne' : /pea|assurance|bourse|titres|crypto/i.test(a.name) ? 'placement' : 'courant';
+}
+function accountGroups() {
+  return KINDS.map(([k, label]) => {
+    const list = state.accounts.filter(a => accountKind(a) === k);
+    return { k, label, list, total: round2(list.reduce((s, a) => s + accountBalance(a), 0)) };
+  }).filter(g => g.list.length);
+}
 const sortTx = list => [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.created || 0) - (a.created || 0));
 
 // ---- Navigation ----
@@ -501,6 +515,7 @@ function renderHome() {
   const total = state.accounts.reduce((s, a) => s + accountBalance(a), 0);
   const b = budgetSummary(month), mp = monthProgress(month);
   const recent = sortTx(state.transactions).slice(0, 5);
+  const groups = accountGroups();
   const welcome = !state.transactions.length ? `<div class="card"><h2>Bienvenue</h2><p style="margin:0 0 14px">Ajoutez vos dépenses et revenus avec le bouton <b>+</b>, puis fixez vos budgets.</p><div class="btn-row"><button class="btn primary" data-action="addTx">Ajouter une opération</button>${state.finarySyncedAt ? '' : '<button class="btn" data-action="finary">Importer mes comptes Finary</button>'}<button class="btn" data-action="demo">Voir avec des exemples</button></div></div>` : '';
   const status = b.total ? budgetStatus(b.used, b.total, mp) : null;
   $('#view-home').innerHTML = `
@@ -520,8 +535,13 @@ function renderHome() {
       <div class="mid ${b.left < 0 ? 'neg' : ''}">${fmt(b.left)} <span class="label">sur ${fmt0(b.total)}</span></div>
       <div style="margin-top:12px">${progressBar(b.used / b.total, STATUS_COLOR[status], mp)}</div>
     </button>` : ''}
-    <div class="section-title"><span>Comptes</span><span class="num" style="text-transform:none;letter-spacing:0;color:var(--text);font-size:15px">${fmt(total)}</span></div>
-    <div class="list">${state.accounts.map(a => { const v = accountBalance(a); return `<button class="item" data-action="editAccount" data-id="${a.id}" style="min-height:52px"><span class="item-main"><span class="item-title" style="white-space:normal">${esc(a.name)}</span>${a.finaryId ? '<span class="item-sub">Finary</span>' : ''}</span><span class="item-amt ${v < 0 ? 'neg' : ''}">${fmt(v)}</span></button>`; }).join('')}</div>
+    <div class="card">
+      <div class="label">Patrimoine</div>
+      <div class="mid">${fmt(total)}</div>
+      <div class="split" style="grid-template-columns:repeat(${Math.min(groups.length, 2)}, 1fr)">${groups.map(g => `<div${groups.length === 3 && g.k === 'placement' ? ' style="grid-column:1 / -1"' : ''}><div class="label">${g.label}</div><div class="mid ${g.total < 0 ? 'neg' : ''}" style="font-size:19px">${fmt(g.total)}</div>${total > 0 && g.total > 0 ? `<div class="label">${Math.round(g.total / total * 100)} %</div>` : ''}</div>`).join('')}</div>
+    </div>
+    ${groups.map(g => `<div class="section-title"><span>${g.label}</span><span class="num" style="text-transform:none;letter-spacing:0;color:var(--text);font-size:15px">${fmt(g.total)}</span></div>
+    <div class="list">${g.list.map(a => { const v = accountBalance(a); return `<button class="item" data-action="editAccount" data-id="${a.id}" style="min-height:52px"><span class="item-main"><span class="item-title" style="white-space:normal">${esc(a.name)}</span>${a.finaryId ? '<span class="item-sub">Finary</span>' : ''}</span><span class="item-amt ${v < 0 ? 'neg' : ''}">${fmt(v)}</span></button>`; }).join('')}</div>`).join('')}
     <div class="section-title"><span>Dernières opérations</span>${recent.length ? '<button data-action="tab" data-id="ops">Tout voir</button>' : ''}</div>
     <div class="list">${recent.map(txItem).join('') || '<div class="empty">Aucune opération.</div>'}</div>
     <div class="card"><h2>Dépenses par catégorie</h2>${donut(month)}</div>
@@ -755,7 +775,7 @@ function renderSettings() {
     <div class="section-title"><span>Finary</span></div>
     <div class="list">${item('finary', state.finarySyncedAt ? 'Mettre à jour depuis Finary' : 'Importer mes comptes Finary', state.finarySyncedAt ? `${fin} compte(s) relié(s) · ${new Date(state.finarySyncedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}` : 'Comptes et soldes, en lecture seule')}</div>
     <div class="section-title"><span>Comptes</span></div>
-    <div class="list">${state.accounts.map(a => item('editAccount', esc(a.name), a.finaryId ? 'Relié à Finary' : '', `<span class="item-amt">${fmt(accountBalance(a))}</span>`, a.id)).join('')}${item('addAccount', '<span style="color:var(--accent)">Ajouter un compte</span>')}</div>
+    <div class="list">${state.accounts.map(a => item('editAccount', esc(a.name), KINDS.find(k => k[0] === accountKind(a))[1] + (a.finaryId ? ' · Finary' : ''), `<span class="item-amt">${fmt(accountBalance(a))}</span>`, a.id)).join('')}${item('addAccount', '<span style="color:var(--accent)">Ajouter un compte</span>')}</div>
     <div class="section-title"><span>Catégories</span></div>
     <div class="list">${state.categories.map(c => `<button class="item" data-action="editCategory" data-id="${c.id}" style="min-height:52px">${avatar(c)}<span class="item-main"><span class="item-title">${esc(c.name)}</span><span class="item-sub">${c.type === 'revenu' ? 'Revenu' : 'Dépense'}</span></span><span class="chev">›</span></button>`).join('')}${item('addCategory', '<span style="color:var(--accent)">Ajouter une catégorie</span>')}</div>
     <div class="section-title"><span>Classement automatique</span></div>
@@ -783,6 +803,7 @@ function accountSheet(id) {
   openSheet(a ? 'Compte' : 'Nouveau compte', `
     <div class="form">
       <label class="field"><span>Nom</span><input id="aName" value="${esc(a?.name || '')}" placeholder="ex. Livret A"></label>
+      <label class="field"><span>Type</span><select id="aKind">${KINDS.map(([k, l]) => `<option value="${k}" ${a && accountKind(a) === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       ${a?.finaryId ? `<div class="field"><span>Solde</span><span class="grow num" style="text-align:right">${fmt(accountBalance(a))}</span></div>` : `<label class="field"><span>Solde initial</span><input id="aInit" inputmode="decimal" value="${a ? String(a.initial || 0).replace('.', ',') : ''}" placeholder="0 €"></label>`}
     </div>
     ${a?.finaryId ? '<p class="hint">Le solde de ce compte suit celui de Finary.</p>' : '<p class="hint">Le solde affiché = solde initial + opérations saisies sur ce compte.</p>'}
@@ -799,7 +820,8 @@ function accountSheet(id) {
     onOk(sh) {
       const name = $('#aName', sh).value.trim(); if (!name) { toast('Indiquez un nom'); return false; }
       const init = $('#aInit', sh) ? round2(parseAmount($('#aInit', sh).value || '') || 0) : null;
-      if (a) { a.name = name; if (init !== null) a.initial = init; } else state.accounts.push({ id: uid(), name, initial: init || 0 });
+      const kind = $('#aKind', sh).value;
+      if (a) { a.name = name; a.kind = kind; if (init !== null) a.initial = init; } else state.accounts.push({ id: uid(), name, initial: init || 0, kind });
       save(); render();
     }
   });
@@ -996,7 +1018,7 @@ async function syncFinary(silent = false) {
       let a = state.accounts.find(x => x.finaryId === r.id);
       if (!a) {
         const inst = instName(r);
-        a = { id: uid(), name: inst ? `${at.name} (${inst})` : at.name, initial: 0, finaryId: r.id };
+        a = { id: uid(), name: inst && !at.name.toLowerCase().includes(inst.toLowerCase()) ? `${at.name} (${inst})` : at.name, initial: 0, finaryId: r.id };
         state.accounts.push(a); added++;
       } else updated++;
       a.finaryType = at.account_type;
