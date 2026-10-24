@@ -6,6 +6,7 @@
 <title>Mes Finances</title>
 <style>
 :root {
+  color-scheme: light;
   --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f0f2f5; --border: #dfe3e8;
   --text: #1c2430; --muted: #66707d; --accent: #2f6fde; --accent-text: #ffffff;
   --pos: #1a8a4a; --neg: #c93636; --warn: #c98a16;
@@ -15,24 +16,25 @@
   :root:not([data-theme="light"]) {
     --bg: #12161c; --surface: #1b2129; --surface-2: #232a34; --border: #2f3844;
     --text: #e6e9ee; --muted: #9aa4b1; --accent: #5b8ff0; --accent-text: #0b1220;
-    --pos: #4cc27e; --neg: #f06a6a; --warn: #e6b24a; --shadow: none;
+    --pos: #4cc27e; --neg: #f06a6a; --warn: #e6b24a; --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #12161c; --surface: #1b2129; --surface-2: #232a34; --border: #2f3844;
   --text: #e6e9ee; --muted: #9aa4b1; --accent: #5b8ff0; --accent-text: #0b1220;
-  --pos: #4cc27e; --neg: #f06a6a; --warn: #e6b24a; --shadow: none;
+  --pos: #4cc27e; --neg: #f06a6a; --warn: #e6b24a; --shadow: none; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
-.bar { max-width: 1100px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.bar { max-width: 1100px; margin: 0 auto; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .brand { font-weight: 700; font-size: 18px; margin-right: auto; }
 nav { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; }
 nav button { background: none; border: 0; color: var(--muted); padding: 8px 12px; border-radius: 8px; cursor: pointer; font: inherit; white-space: nowrap; }
 nav button.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
-main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; min-width: 0; }
 .card h2 { font-size: 16px; margin: 0 0 12px; }
 .grid { display: grid; gap: 16px; }
@@ -71,6 +73,14 @@ svg text { fill: var(--muted); font-size: 11px; }
 .hidden { display: none !important; }
 .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 10; }
 .toast.show { opacity: 1; }
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 20; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; max-width: 420px; width: 100%; }
+.modal p { margin: 0 0 16px; }
+.sync { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.sync[data-s="ok"]::before { background: var(--pos); }
+.sync[data-s="error"]::before { background: var(--neg); }
+.sync[data-s="busy"]::before { background: var(--warn); }
 .pill { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--surface-2); color: var(--muted); }
 @media (max-width: 600px) { .kpi .value { font-size: 20px; } .brand { font-size: 16px; } }
 </style>
@@ -79,6 +89,7 @@ svg text { fill: var(--muted); font-size: 11px; }
 <header>
   <div class="bar">
     <div class="brand">💶 Mes Finances</div>
+    <span class="sync" id="syncStatus" data-s="local">Sur cet appareil</span>
     <nav id="nav">
       <button data-view="dashboard" class="active">Tableau de bord</button>
       <button data-view="transactions">Transactions</button>
@@ -98,6 +109,11 @@ svg text { fill: var(--muted); font-size: 11px; }
       <button class="btn" id="nextMonth" aria-label="Mois suivant">›</button>
       <span class="spacer"></span>
       <button class="btn primary" id="quickAdd">+ Ajouter une opération</button>
+    </div>
+    <div class="card hidden" id="welcome">
+      <h2>Bienvenue !</h2>
+      <p style="margin-top:0">Commencez par ajouter vos opérations, ou chargez des exemples pour découvrir l'application (vous pourrez tout effacer ensuite dans Paramètres).</p>
+      <div class="row"><button class="btn primary" id="welcomeAdd">Ajouter ma première opération</button><button class="btn" id="welcomeDemo">Voir avec des exemples</button></div>
     </div>
     <div class="grid kpis" style="margin-bottom:16px">
       <div class="card kpi"><div class="label">Revenus du mois</div><div class="value pos" id="kIncome"></div></div>
@@ -230,6 +246,9 @@ svg text { fill: var(--muted); font-size: 11px; }
   </section>
 </main>
 <div class="toast" id="toast"></div>
+<div class="modal-bg hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalMsg">
+  <div class="modal"><p id="modalMsg"></p><div class="row" style="justify-content:flex-end"><button class="btn" id="modalNo">Annuler</button><button class="btn primary" id="modalYes">Confirmer</button></div></div>
+</div>
 
 <script>
 (() => {
@@ -269,12 +288,83 @@ let state;
 function load() {
   try { const raw = localStorage.getItem(STORE_KEY); state = raw ? JSON.parse(raw) : freshState(); }
   catch { state = freshState(); }
+  normalize();
+}
+function normalize() {
+  if (!state || typeof state !== 'object') state = freshState();
   for (const k of ['accounts', 'categories', 'transactions', 'goals', 'rules', 'recurring']) if (!Array.isArray(state[k])) state[k] = [];
   if (!state.budgets || typeof state.budgets !== 'object') state.budgets = {};
   if (!state.accounts.length) state.accounts.push({ id: uid(), name: 'Compte courant', initial: 0 });
 }
-function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { toast('Impossible d\'enregistrer (stockage indisponible)'); } }
+// Enregistrement : une copie locale dans le navigateur, et, quand la page est ouverte sur claude.ai,
+// une copie privée dans votre compte (un document de réglages + un document par mois d'opérations).
+let cloud = null, cloudUser = null, cloudTimer = null, writing = false, pending = false;
+const lastWritten = new Map();
+const settingsRef = () => cloud.doc(`data/users/${cloudUser}/settings`);
+const monthsCol = () => settingsRef().collection('months');
+function setSync(s) {
+  const el = $('#syncStatus'); el.dataset.s = s;
+  el.textContent = { local: 'Sur cet appareil', ok: 'Enregistré dans votre compte', busy: 'Enregistrement…', error: 'Erreur d\'enregistrement' }[s];
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { if (!cloud) toast('Impossible d\'enregistrer (stockage indisponible)'); }
+  if (cloud) { setSync('busy'); clearTimeout(cloudTimer); cloudTimer = setTimeout(flush, 500); }
+}
+async function flush() {
+  if (!cloud) return;
+  if (writing) { pending = true; return; }
+  writing = true;
+  try {
+    do {
+      pending = false;
+      const { transactions, ...settings } = state, months = {};
+      for (const t of transactions) (months[monthKey(t.date)] ||= []).push(t);
+      const sj = JSON.stringify(settings);
+      if (lastWritten.get('') !== sj) { await settingsRef().set(settings); lastWritten.set('', sj); }
+      const keys = new Set([...Object.keys(months), ...[...lastWritten.keys()].filter(k => k)]);
+      for (const k of keys) {
+        if (!months[k]) { await monthsCol().doc(k).delete(); lastWritten.delete(k); continue; }
+        const j = JSON.stringify(months[k]);
+        if (lastWritten.get(k) !== j) { await monthsCol().doc(k).set({ tx: months[k] }); lastWritten.set(k, j); }
+      }
+    } while (pending);
+    setSync('ok');
+  } catch (e) {
+    setSync('error');
+    toast(e?.code === 'quota_exceeded' ? 'Espace de stockage plein : exportez puis supprimez d\'anciennes opérations' : 'Enregistrement impossible, vos données restent sur cet appareil');
+  } finally { writing = false; }
+}
+async function connectCloud() {
+  if (!window.claude?.use) return;
+  const [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+  const id = u ? await u.id() : null;
+  if (!d || !id) return;
+  cloud = d; cloudUser = id; setSync('busy');
+  try {
+    const snap = await settingsRef().get();
+    if (snap.exists) {
+      const months = await monthsCol().limit(1000).get(), tx = [];
+      for (const m of months.docs) { const arr = m.data().tx || []; tx.push(...arr); lastWritten.set(m.id, JSON.stringify(arr)); }
+      lastWritten.set('', JSON.stringify(snap.data()));
+      state = { ...structuredClone(snap.data()), transactions: structuredClone(tx) };
+      normalize();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
+      applyTheme(); applyRecurring(); resetTxForm(); render();
+      setSync('ok');
+    } else {
+      await flush();
+    }
+  } catch { cloud = null; setSync('error'); toast('Votre compte ne répond pas, vos données restent sur cet appareil'); }
+}
 
+function ask(msg, yes = 'Confirmer', no = 'Annuler') {
+  return new Promise(resolve => {
+    const m = $('#modal'); $('#modalMsg').textContent = msg; $('#modalYes').textContent = yes; $('#modalNo').textContent = no;
+    m.classList.remove('hidden'); $('#modalYes').focus();
+    const done = v => { m.classList.add('hidden'); $('#modalYes').onclick = $('#modalNo').onclick = null; resolve(v); };
+    $('#modalYes').onclick = () => done(true); $('#modalNo').onclick = () => done(false);
+  });
+}
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
 const cat = id => state.categories.find(c => c.id === id);
 const acc = id => state.accounts.find(a => a.id === id);
@@ -400,6 +490,7 @@ const sortTx = list => [...list].sort((a, b) => b.date.localeCompare(a.date) || 
 
 // ---- Tableau de bord ----
 function renderDashboard() {
+  $('#welcome').classList.toggle('hidden', state.transactions.length > 0);
   $('#monthLabel').textContent = monthLabel(dashMonth);
   const { income, expense } = monthTotals(dashMonth), net = round2(income - expense);
   $('#kIncome').textContent = fmt(income);
@@ -416,6 +507,8 @@ function renderDashboard() {
 }
 $('#prevMonth').onclick = () => { dashMonth = shiftMonth(dashMonth, -1); renderDashboard(); };
 $('#nextMonth').onclick = () => { dashMonth = shiftMonth(dashMonth, 1); renderDashboard(); };
+$('#welcomeAdd').onclick = () => { show('transactions'); $('#txForm [name=amount]').focus(); };
+$('#welcomeDemo').onclick = () => $('#loadDemo').click();
 $('#quickAdd').onclick = () => { show('transactions'); $('#txForm [name=amount]').focus(); };
 
 // ---- Transactions ----
@@ -475,11 +568,12 @@ function startEdit(id) {
   $('#txFormTitle').textContent = 'Modifier l\'opération'; $('#txSubmit').textContent = 'Enregistrer'; $('#txCancel').classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function deleteTx(id) {
+async function deleteTx(id) {
   const t = state.transactions.find(x => x.id === id); if (!t) return;
   if (t.recurringId && state.recurring.some(r => r.id === t.recurringId)) {
-    if (confirm('Cette opération est récurrente. Arrêter aussi les prochaines répétitions ?')) state.recurring = state.recurring.filter(r => r.id !== t.recurringId);
-  } else if (!confirm('Supprimer cette opération ?')) return;
+    const choice = await ask('Cette opération se répète chaque mois. Que voulez-vous faire ?', 'Supprimer et arrêter la répétition', 'Supprimer seulement celle-ci');
+    if (choice) state.recurring = state.recurring.filter(r => r.id !== t.recurringId);
+  } else if (!await ask('Supprimer cette opération ?', 'Supprimer')) return;
   state.transactions = state.transactions.filter(x => x.id !== id);
   save(); render();
 }
@@ -546,9 +640,9 @@ function renderGoals() {
       <div class="row"><input type="number" step="0.01" placeholder="Montant" data-goal-amt="${g.id}" style="flex:1;min-width:90px"><button class="btn" data-goal-add="${g.id}">+ Verser</button><button class="btn" data-goal-sub="${g.id}">− Retirer</button></div></div>`;
   }).join('')}</div>`;
 }
-$('#goalList').addEventListener('click', e => {
+$('#goalList').addEventListener('click', async e => {
   const t = e.target, del = t.dataset.goalDel, add = t.dataset.goalAdd, sub = t.dataset.goalSub;
-  if (del) { if (confirm('Supprimer cet objectif ?')) { state.goals = state.goals.filter(g => g.id !== del); save(); renderGoals(); } return; }
+  if (del) { if (await ask('Supprimer cet objectif ?', 'Supprimer')) { state.goals = state.goals.filter(g => g.id !== del); save(); renderGoals(); } return; }
   const id = add || sub; if (!id) return;
   const v = parseFloat($(`[data-goal-amt="${id}"]`).value); if (!(v > 0)) return toast('Saisissez un montant');
   const g = state.goals.find(x => x.id === id); g.saved = round2(Math.max(0, g.saved + (add ? v : -v)));
@@ -575,7 +669,7 @@ $('#view-settings').addEventListener('change', e => {
   else return;
   save(); renderSettings();
 });
-$('#view-settings').addEventListener('click', e => {
+$('#view-settings').addEventListener('click', async e => {
   const d = e.target.dataset;
   if (d.accDel) {
     if (state.accounts.length <= 1) return toast('Il faut garder au moins un compte');
@@ -583,7 +677,7 @@ $('#view-settings').addEventListener('click', e => {
     state.accounts = state.accounts.filter(a => a.id !== d.accDel);
   } else if (d.catDel) {
     const used = state.transactions.filter(t => t.categoryId === d.catDel).length;
-    if (used && !confirm(`${used} opération(s) utilisent cette catégorie. Elles seront déplacées dans « À classer ». Continuer ?`)) return;
+    if (used && !await ask(`${used} opération(s) utilisent cette catégorie. Elles seront déplacées dans « À classer ». Continuer ?`, 'Supprimer la catégorie')) return;
     state.categories = state.categories.filter(c => c.id !== d.catDel);
     let fb = fallbackCatId();
     if (used && !fb) { fb = uid(); state.categories.push({ id: fb, name: 'À classer', type: 'depense', color: '#9aa4b1' }); }
@@ -595,10 +689,20 @@ $('#view-settings').addEventListener('click', e => {
   else return;
   save(); renderSettings();
 });
-function applyTheme() { if (state.theme) document.documentElement.dataset.theme = state.theme; else delete document.documentElement.dataset.theme; }
+const hostTheme = document.documentElement.dataset.theme;
+function applyTheme() {
+  const t = state.theme || hostTheme;
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+}
 $('#themeSel').onchange = e => { state.theme = e.target.value; save(); applyTheme(); };
 
-function download(name, content, type) {
+async function download(name, content, type) {
+  const dl = window.claude?.use ? await window.claude.use('downloads') : null;
+  if (dl) {
+    try { await dl.save({ filename: name, data: new Blob([content], { type }) }); }
+    catch (e) { if (e?.code !== 'declined') toast('Téléchargement impossible ici'); }
+    return;
+  }
   const url = URL.createObjectURL(new Blob([content], { type }));
   const a = Object.assign(document.createElement('a'), { href: url, download: name });
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -609,8 +713,8 @@ $('#importJson').onchange = async e => {
   try {
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data.transactions) || !Array.isArray(data.accounts)) throw new Error();
-    if (!confirm('Remplacer toutes les données actuelles par cette sauvegarde ?')) return;
-    localStorage.setItem(STORE_KEY, JSON.stringify(data)); load(); applyTheme(); render(); toast('Sauvegarde restaurée');
+    if (!await ask('Remplacer toutes les données actuelles par cette sauvegarde ?', 'Restaurer')) return;
+    state = data; normalize(); save(); applyTheme(); render(); toast('Sauvegarde restaurée');
   } catch { toast('Fichier de sauvegarde invalide'); }
 };
 const csvCell = v => /[";\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
@@ -666,12 +770,12 @@ $('#importCsv').onchange = async e => {
   save(); render();
   toast(`${n} opération(s) importée(s)${skipped ? `, ${skipped} ligne(s) ignorée(s)` : ''}`);
 };
-$('#resetAll').onclick = () => {
-  if (!confirm('Effacer définitivement toutes vos données ? Pensez à exporter une sauvegarde avant.')) return;
+$('#resetAll').onclick = async () => {
+  if (!await ask('Effacer définitivement toutes vos données ? Pensez à exporter une sauvegarde avant.', 'Tout effacer')) return;
   state = freshState(); save(); applyTheme(); resetTxForm(); render(); toast('Données effacées');
 };
-$('#loadDemo').onclick = () => {
-  if (state.transactions.length && !confirm('Remplacer vos données par des données de démonstration ?')) return;
+$('#loadDemo').onclick = async () => {
+  if (state.transactions.length && !await ask('Remplacer vos données par des données de démonstration ?', 'Remplacer')) return;
   state = demoState(); save(); applyTheme(); resetTxForm(); dashMonth = monthKey(today()); show('dashboard'); toast('Données de démonstration chargées');
 };
 function demoState() {
@@ -705,6 +809,7 @@ function demoState() {
 
 // ---- Démarrage ----
 load(); applyTheme(); applyRecurring(); resetTxForm(); render();
+connectCloud();
 })();
 </script>
 </body>
