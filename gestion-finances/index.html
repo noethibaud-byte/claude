@@ -269,6 +269,7 @@ svg text { fill: var(--muted); font-size: 11px; }
         </label>
         <span class="spacer"></span>
         <button class="btn" id="loadDemo">Charger des données de démonstration</button>
+        <button class="btn danger" id="clearTx">Supprimer toutes les opérations</button>
         <button class="btn danger" id="resetAll">Tout effacer</button>
       </div>
       <p class="muted" style="font-size:13px">Sur claude.ai, vos données sont enregistrées dans votre compte Claude, visibles par vous seul. Ouvert comme simple fichier, l'application les garde dans ce navigateur. Dans les deux cas, exportez une sauvegarde de temps en temps.</p>
@@ -802,6 +803,12 @@ $('#importCsv').onchange = async e => {
   }
   save(); render();
   toast(`${n} opération(s) importée(s)${skipped ? `, ${skipped} ligne(s) ignorée(s)` : ''}`);
+};
+$('#clearTx').onclick = async () => {
+  if (!state.transactions.length && !state.recurring.length) return toast('Aucune opération à supprimer');
+  if (!await ask(`Supprimer définitivement les ${state.transactions.length} opération(s) et les répétitions mensuelles ? Vos comptes, catégories, budgets et objectifs sont conservés.`, 'Tout supprimer')) return;
+  state.transactions = []; state.recurring = [];
+  resetTxForm(); save(); render(); toast('Toutes les opérations ont été supprimées');
 };
 $('#resetAll').onclick = async () => {
   if (!await ask('Effacer définitivement toutes vos données ? Pensez à exporter une sauvegarde avant.', 'Tout effacer')) return;
