@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f1f2f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)">
 <title>Mes Finances</title>
+<style>
+/* Site autonome (GitHub Pages, écran d'accueil iPhone) : laisse la place à l'heure et à la Dynamic Island,
+   et masque le contenu qui défile derrière la barre d'état. */
+.app { padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important; }
+body::before { content: ""; position: fixed; z-index: 45; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); }
+</style>
 <style>
 /* Mise en page : application mobile (iPhone) — grand titre, contenu en cartes, barre d'onglets fixe en bas, panneaux qui montent du bas. */
 :root {
