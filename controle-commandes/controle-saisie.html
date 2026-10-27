@@ -4,7 +4,7 @@
 /* Layout : liste des commandes en haut, puis la feuille de contrôle façon impression A4 */
 :root{
   --bg:#e9ebe8; --paper:#ffffff; --fg:#111111; --muted:#555c58; --rule:#111111; --cell:#8a8f8c; --head:#e8e8e8;
-  --accent:#2f6b4f;
+  --accent:#2f6b4f; --accent-fg:#ffffff;
   --red:#b3261e; --red-bg:#fde3e0;
   --amber:#a06a00; --amber-line:#c48a00; --amber-bg:#fff2d6;
   --green:#2b7247; --green-bg:#e3f2e8;
@@ -14,11 +14,11 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#121513; --paper:#1c201e; --fg:#ecefed; --muted:#a3aba7; --rule:#d8ddda; --cell:#4a524e; --head:#262b28;
-  --accent:#7cc3a0; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
+  --accent:#7cc3a0; --accent-fg:#0f1a14; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
   --green:#7fd19b; --green-bg:#1b3124; --done:#5d6661; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121513; --paper:#1c201e; --fg:#ecefed; --muted:#a3aba7; --rule:#d8ddda; --cell:#4a524e; --head:#262b28;
-  --accent:#7cc3a0; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
+  --accent:#7cc3a0; --accent-fg:#0f1a14; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
   --green:#7fd19b; --green-bg:#1b3124; --done:#5d6661; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.4}
 .wrap{max-width:860px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
@@ -27,7 +27,6 @@ p{margin:0}
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-/* Liste des commandes */
 .list-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .list-head h1{font-size:1.3rem}
 .list-head span{color:var(--muted);font-size:.85rem}
@@ -36,12 +35,12 @@ button,input{font:inherit;color:inherit}
 .order[aria-current="true"]{border-color:var(--rule);box-shadow:inset 0 0 0 1.5px var(--rule)}
 .order b{font-size:1.05rem}
 .order small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order.new{border-style:dashed;align-items:center;justify-content:center;color:var(--accent);font-weight:700;background:transparent;min-height:84px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:3px;border:1.2px solid}
 .c-red{color:var(--red);border-color:var(--red)} .c-amber{color:var(--amber);border-color:var(--amber-line)} .c-green{color:var(--green);border-color:var(--green)}
 .c-muted{color:var(--muted);border-color:var(--cell)}
 
-/* Feuille */
 .sheet{background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.18);padding:26px 28px 30px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--rule);padding-bottom:6px}
 .top h2{font-size:1.45rem}
@@ -54,7 +53,7 @@ button,input{font:inherit;color:inherit}
 .issue.regle{border-left-color:var(--done)}
 .issue.regle .ititle{text-decoration:line-through;text-decoration-thickness:1px;color:var(--muted)}
 .ititle{font-weight:700;font-size:.95rem}
-.lbl{font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;color:#fff;text-decoration:none;display:inline-block}
+.lbl{font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;color:#fff;display:inline-block}
 .lbl.erreur{background:#b3261e} .lbl.verifier{background:#a06a00} .lbl.regle{background:#5f6763}
 .todo{font-weight:700}
 .todo::before{content:"→ "}
@@ -85,6 +84,21 @@ td.ck{text-align:center}
 .state{background:var(--paper);border:1px dashed var(--cell);border-radius:6px;padding:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 .state b{color:var(--fg)}
 .saved{font-size:.75rem;color:var(--muted);min-height:1em}
+
+/* Boîtes d'action : joindre la fiche de fab, nouvelle commande */
+.action{border:2px solid var(--accent);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;margin:8px 0 4px}
+.action h3{font-size:1rem}
+.btn{background:var(--accent);color:var(--accent-fg);border:0;border-radius:5px;padding:9px 14px;font-weight:700;cursor:pointer;align-self:flex-start}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--cell)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font-size:.85rem;color:var(--muted)}
+.status.err{color:var(--red);font-weight:700}
+.files{font-size:.8rem;color:var(--muted)}
+.files a{color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:3px;font-size:.85rem}
+.field input[type=text]{border:1.5px solid var(--cell);border-radius:4px;padding:7px 9px;background:var(--paper)}
+.picked{font-size:.8rem;color:var(--muted)}
 @media (max-width:520px){.sheet{padding:16px 14px 20px}}
 </style>
 
@@ -110,29 +124,35 @@ td.ck{text-align:center}
       else if (k === 'value') el.value = v;
       else el.setAttribute(k, v === true ? '' : v);
     }
-    for (const kid of kids.flat()){
+    for (const kid of kids.flat(Infinity)){
       if (kid == null || kid === false) continue;
       el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
     }
     return el;
   }
+  const S = v => (v == null ? '' : String(v));
 
-  let db = null, orders = [], etats = {}, current = null;
+  let db = null, sample = null, assets = null;
+  let orders = [], etats = {}, current = null;
+  let busy = null; // {id, ctl, status, err}
   const NIV = {erreur:'ERREUR', verifier:'À VÉRIFIER', regle:'RÉGLÉ'};
+
+  // Partie « contrôle » d'une commande : résultat de la vérification, ou la commande elle-même (ancien format)
+  const ctrl = o => o.verif || (o.type === 'controle' ? o : null);
 
   function etat(id){ return etats[id] || {issues:{}, checks:{}, signatures:{}}; }
   function issueDone(o, is){ const e = etat(o.id).issues?.[is.id]; return !!(e && e.choix); }
   function counts(o){
-    const iss = o.issues || [];
+    const c = ctrl(o); const iss = (c && c.issues) || [];
     return {
       err: iss.filter(i => i.niveau === 'erreur' && !issueDone(o,i)).length,
       ver: iss.filter(i => i.niveau === 'verifier' && !issueDone(o,i)).length,
-      ok: o.posOk || 0
+      ok: (c && c.posOk) || 0
     };
   }
   function edited(o){ const s = etat(o.id).signatures || {}; return !!(s.edition && s.edition.trim()); }
 
-  // ---- écriture (une à la fois par document) ----
+  // ---- écriture des états (une à la fois par document) ----
   const queues = {};
   function save(id, patch){
     const cur = JSON.parse(JSON.stringify(etat(id)));
@@ -140,12 +160,11 @@ td.ck{text-align:center}
     etats[id] = cur;
     renderList();
     if (!db) return;
-    const run = (queues[id] || Promise.resolve()).then(() => db.doc('etats/' + id).set(cur))
+    queues[id] = (queues[id] || Promise.resolve()).then(() => db.doc('etats/' + id).set(cur))
       .then(() => { $('#saved').textContent = 'Enregistré.'; })
       .catch(e => { $('#saved').textContent = e && e.code === 'invalid_argument'
         ? "Vous n'avez pas le droit de modifier cette page : demandez un accès Contributeur."
         : "Enregistrement impossible pour le moment. Réessayez dans un instant."; });
-    queues[id] = run;
   }
   function deepMerge(t, p){
     for (const [k,v] of Object.entries(p)){
@@ -161,90 +180,82 @@ td.ck{text-align:center}
     for (const o of orders){
       const c = counts(o);
       const chips = [];
-      if (o.type === 'saisie') chips.push(h('span',{class:'chip c-muted'},'Fiche de saisie'));
+      if (!ctrl(o)) chips.push(h('span',{class:'chip c-muted'}, 'Fiche de fab à joindre'));
       else {
         if (c.err) chips.push(h('span',{class:'chip c-red'}, c.err + ' erreur' + (c.err>1?'s':'')));
         if (c.ver) chips.push(h('span',{class:'chip c-amber'}, c.ver + ' à vérifier'));
         if (!c.err && !c.ver) chips.push(h('span',{class:'chip c-green'},'Tout réglé'));
       }
       if (edited(o)) chips.push(h('span',{class:'chip c-green'},'Éditée'));
+      if (busy && busy.id === o.id) chips.push(h('span',{class:'chip c-muted'},'Vérification…'));
       box.append(h('button',{class:'order', role:'listitem', 'aria-current': current === o.id ? 'true' : 'false',
         onclick:() => { location.hash = 'c-' + o.id; }},
         h('b',null, o.titreCourt || ('Commande ' + o.num)),
         h('small',null, [o.client, o.chantier].filter(Boolean).join(' · ')),
         h('div',{class:'chips'}, chips)));
     }
+    box.append(h('button',{class:'order new', role:'listitem', 'aria-current': current === 'nouvelle' ? 'true' : 'false',
+      onclick:() => { location.hash = 'nouvelle'; }}, '+ Nouvelle commande'));
   }
 
   // ---- feuille ----
   function renderSheet(){
     const main = $('#main');
+    if (current === 'nouvelle'){ main.replaceChildren(newOrderForm()); return; }
     const o = orders.find(x => x.id === current);
     if (!o){
       main.replaceChildren(h('div',{class:'state'},
-        orders.length ? h('b',null,'Choisissez une commande ci-dessus.') : h('b',null,'Aucune commande contrôlée pour le moment.'),
-        h('p',null,"Pour en ajouter une : envoyez à Claude la photo de l'ARC et les exports ARCHIMEDE (récap, fiches de fab, XML, .imp, vitrages, parcloses, panneaux, annexes). La commande apparaîtra ici.")));
+        h('b',null, orders.length ? 'Choisissez une commande ci-dessus.' : 'Aucune commande pour le moment.'),
+        h('p',null,"Cliquez sur « + Nouvelle commande » et prenez l'ARC en photo.")));
       return;
     }
     const e = etat(o.id);
+    const c = ctrl(o);
     const sheet = h('article',{class:'sheet'});
-    const c = counts(o);
     sheet.append(h('div',{class:'top'},
       h('div',null, h('h2',null, o.titre), h('div',{class:'meta'}, o.meta)),
-      o.date ? h('div',{class:'meta'}, 'Contrôlé le ' + o.date) : null));
-    if (o.type !== 'saisie'){
+      (c && c.date) ? h('div',{class:'meta'}, 'Contrôlé le ' + c.date) : null));
+
+    if (c){
+      const k = counts(o);
       sheet.append(h('div',{class:'score'},
-        h('span',{class:'c-red'}, c.err + ' ERREUR' + (c.err>1?'S':'')),
-        h('span',{class:'c-amber'}, c.ver + ' À VÉRIFIER'),
-        h('span',{class:'c-green'}, (o.posOk||0) + ' POSITIONS OK')));
+        h('span',{class:'c-red'}, k.err + ' ERREUR' + (k.err>1?'S':'')),
+        h('span',{class:'c-amber'}, k.ver + ' À VÉRIFIER'),
+        h('span',{class:'c-green'}, k.ok + ' POSITIONS OK')));
     }
 
-    if (o.entete && o.entete.length){
-      sheet.append(h('h3',{class:'sec'},'En-tête'));
-      sheet.append(h('div',{class:'entete'}, o.entete.map((t,i) => {
-        const key = 'e' + i;
-        return h('label',{class:'chk'}, h('input',{type:'checkbox', checked: e.checks?.[key],
-          onchange: ev => save(o.id,{checks:{[key]:ev.target.checked}})}), h('span',null,t));
-      })));
-    }
+    if (o.type !== 'controle') sheet.append(fabBox(o));
 
-    if (o.issues && o.issues.length){
-      sheet.append(h('h3',{class:'sec'},'À traiter'));
-      for (const is of o.issues){
-        const st = e.issues?.[is.id] || {};
-        const done = !!st.choix;
-        const lvl = done ? 'regle' : is.niveau;
-        const box = h('div',{class:'issue ' + is.niveau + (done ? ' regle' : '')});
-        box.append(h('div',{class:'ititle'}, h('span',{class:'lbl ' + lvl}, NIV[lvl]), is.titre));
-        if (is.texte) box.append(h('p',null,is.texte));
-        if (is.compare) box.append(h('div',{class:'cmp'}, is.compare.map(x =>
-          h('div',{class:x.bad ? 'bad' : null}, h('small',null,x.label), h('strong',null,x.val)))));
-        if (is.action) box.append(h('p',{class:'todo'}, is.action));
-        if (is.table) box.append(table(is.table));
-        if (is.note) box.append(h('p',{class:'foot'}, is.note));
-        const name = 'ch-' + o.id + '-' + is.id;
-        box.append(h('div',{class:'choices'},
-          (is.choix || ['Réglé']).map(lab => h('label',null,
-            h('input',{type:'radio', name, checked: st.choix === lab,
-              onchange: () => { save(o.id,{issues:{[is.id]:{choix:lab}}}); renderSheet(); }}), lab)),
-          done ? h('button',{type:'button', class:'chip c-muted', style:'cursor:pointer;background:none',
-            onclick: () => { save(o.id,{issues:{[is.id]:{choix:''}}}); renderSheet(); }}, 'Rouvrir') : null));
-        box.append(h('input',{class:'note', type:'text', id:'note-' + o.id + '-' + is.id, placeholder:'Décision, commentaire…',
-          value: st.note || '', 'aria-label':'Commentaire : ' + is.titre,
-          onchange: ev => save(o.id,{issues:{[is.id]:{note:ev.target.value}}})}));
-        sheet.append(box);
+    if (c){
+      if (c.issues && c.issues.length){
+        sheet.append(h('h3',{class:'sec'},'À traiter'));
+        for (const is of c.issues) sheet.append(issueBox(o, e, is));
+      }
+      if (c.ok && c.ok.length){
+        sheet.append(h('h3',{class:'sec'},"Conforme à l'ARC"));
+        sheet.append(h('ul',{class:'ok'}, c.ok.map(t => h('li',null,t))));
+      }
+      if (c.positions){
+        sheet.append(h('h3',{class:'sec'},'Détail position par position'));
+        sheet.append(table(c.positions));
+        if (c.positions.foot) sheet.append(h('p',{class:'foot'}, c.positions.foot));
       }
     }
 
-    if (o.ok && o.ok.length){
-      sheet.append(h('h3',{class:'sec'},"Conforme à l'ARC"));
-      sheet.append(h('ul',{class:'ok'}, o.ok.map(t => h('li',null,t))));
-    }
-
-    if (o.positions){
-      sheet.append(h('h3',{class:'sec'}, o.type === 'saisie' ? 'Positions' : 'Détail position par position'));
-      sheet.append(table(o.positions, o));
-      if (o.positions.foot) sheet.append(h('p',{class:'foot'}, o.positions.foot));
+    if (o.type !== 'controle'){
+      if (o.entete && o.entete.length){
+        sheet.append(h('h3',{class:'sec'}, c ? "Fiche de saisie : en-tête de l'ARC" : 'En-tête'));
+        sheet.append(h('div',{class:'entete'}, o.entete.map((t,i) => {
+          const key = 'e' + i;
+          return h('label',{class:'chk'}, h('input',{type:'checkbox', checked: e.checks?.[key],
+            onchange: ev => save(o.id,{checks:{[key]:ev.target.checked}})}), h('span',null,t));
+        })));
+      }
+      if (o.positions){
+        sheet.append(h('h3',{class:'sec'}, c ? "Fiche de saisie : positions de l'ARC" : 'Positions'));
+        sheet.append(table(o.positions, o));
+        if (o.positions.foot) sheet.append(h('p',{class:'foot'}, o.positions.foot));
+      }
     }
 
     const sig = o.signatures || ['Saisie corrigée le', 'Vérifiée par', 'Commande éditée le'];
@@ -255,16 +266,42 @@ td.ck{text-align:center}
     main.replaceChildren(sheet);
   }
 
+  function issueBox(o, e, is){
+    const st = e.issues?.[is.id] || {};
+    const done = !!st.choix;
+    const lvl = done ? 'regle' : is.niveau;
+    const box = h('div',{class:'issue ' + is.niveau + (done ? ' regle' : '')});
+    box.append(h('div',{class:'ititle'}, h('span',{class:'lbl ' + lvl}, NIV[lvl]), is.titre));
+    if (is.texte) box.append(h('p',null,is.texte));
+    if (is.compare && is.compare.length) box.append(h('div',{class:'cmp'}, is.compare.map(x =>
+      h('div',{class:x.bad ? 'bad' : null}, h('small',null,x.label), h('strong',null,x.val)))));
+    if (is.action) box.append(h('p',{class:'todo'}, is.action));
+    if (is.table) box.append(table(is.table));
+    if (is.note) box.append(h('p',{class:'foot'}, is.note));
+    const name = 'ch-' + o.id + '-' + is.id;
+    const choix = (is.choix && is.choix.length) ? is.choix : (is.niveau === 'erreur' ? ['Corrigé','Validé tel quel'] : ['OK','Corrigé']);
+    box.append(h('div',{class:'choices'},
+      choix.map(lab => h('label',null,
+        h('input',{type:'radio', name, checked: st.choix === lab,
+          onchange: () => { save(o.id,{issues:{[is.id]:{choix:lab}}}); renderSheet(); }}), lab)),
+      done ? h('button',{type:'button', class:'chip c-muted', style:'cursor:pointer;background:none',
+        onclick: () => { save(o.id,{issues:{[is.id]:{choix:''}}}); renderSheet(); }}, 'Rouvrir') : null));
+    box.append(h('input',{class:'note', type:'text', id:'note-' + o.id + '-' + is.id, placeholder:'Décision, commentaire…',
+      value: st.note || '', 'aria-label':'Commentaire : ' + is.titre,
+      onchange: ev => save(o.id,{issues:{[is.id]:{note:ev.target.value}}})}));
+    return box;
+  }
+
   function table(t, o){
     const checkCols = (o && t.checkCols) || [];
     const e = o ? etat(o.id) : null;
     return h('div',{class:'tbl'}, h('table',null,
-      h('thead',null, h('tr',null, t.head.map(x => h('th',null,x)), checkCols.map(x => h('th',null,x)))),
-      h('tbody',null, t.rows.map((r,ri) => {
-        const cells = Array.isArray(r) ? r : r.cells;
+      h('thead',null, h('tr',null, (t.head||[]).map(x => h('th',null,x)), checkCols.map(x => h('th',null,x)))),
+      h('tbody',null, (t.rows||[]).map((r,ri) => {
+        const cells = Array.isArray(r) ? r : (r.cells || []);
         const cls = Array.isArray(r) ? null : r.statut;
         return h('tr',{class:cls},
-          cells.map((x,ci) => h('td',{class:(t.mono||[]).includes(ci) ? 'n' : null}, x)),
+          cells.map((x,ci) => h('td',{class:(t.mono||[]).includes(ci) ? 'n' : null}, S(x))),
           checkCols.map((col,ci) => {
             const key = 'p' + ri + '-' + ci;
             return h('td',{class:'ck'}, h('input',{type:'checkbox', 'aria-label': col + ' ligne ' + (ri+1),
@@ -273,15 +310,259 @@ td.ck{text-align:center}
       }))));
   }
 
+  // ---- fichiers → images pour Claude ----
+  function loadScript(src){
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.append(s); });
+  }
+  async function pdfjs(){
+    if (!window.pdfjsLib){
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');
+    }
+    return window.pdfjsLib;
+  }
+  async function filesToImages(files, progress){
+    const out = [];
+    for (const f of files){
+      const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+      if (!isPdf){ out.push(f); continue; }
+      const lib = await pdfjs();
+      const doc = await lib.getDocument({data: new Uint8Array(await f.arrayBuffer())}).promise;
+      for (let i = 1; i <= doc.numPages; i++){
+        progress('Lecture de « ' + f.name + ' » : page ' + i + ' sur ' + doc.numPages + '…');
+        const page = await doc.getPage(i);
+        const vp0 = page.getViewport({scale:1});
+        const vp = page.getViewport({scale: Math.min(2.2, 1150 / Math.max(vp0.width, vp0.height) * 1.4)});
+        const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+        const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
+        await page.render({canvasContext: cx, viewport: vp}).promise;
+        out.push(await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.88)));
+      }
+    }
+    return out;
+  }
+  async function keepFiles(files){
+    if (!assets) return [];
+    const kept = [];
+    for (const f of files){
+      try { const r = await assets.upload(f, f.type ? undefined : {type:'application/pdf'}); kept.push({id:r.id, nom:f.name}); }
+      catch (_) { /* le fichier n'est pas conservé, la vérification continue */ }
+    }
+    return kept;
+  }
+  function sampleMsg(e){
+    const c = e && e.code;
+    if (c === 'cancelled') return 'Arrêté.';
+    if (c === 'not_granted' || c === 'sampling_disabled') return "Claude n'est pas autorisé sur cette page. Autorisez-le dans le menu de la page, puis recommencez.";
+    if (c === 'images_unavailable') return "Ce poste ne peut pas envoyer d'images à Claude depuis la page.";
+    if (c === 'image_rejected') return 'Un fichier est illisible ou trop lourd. Essayez avec un autre fichier.';
+    if (c === 'rate_limited') return 'Trop de demandes pour le moment. Réessayez dans quelques minutes.';
+    if (c === 'invalid_json') return "La réponse de Claude n'a pas pu être lue. Relancez la vérification.";
+    if (c === 'session_expired') return 'Reconnectez-vous à claude.ai, puis recommencez.';
+    return "La lecture a échoué. Relancez dans un instant.";
+  }
+  async function imageBudget(){
+    if (!sample) throw {code:'sampling_disabled'};
+    const lim = await sample.limits().catch(() => null);
+    if (!lim || !lim.images) throw {code:'images_unavailable'};
+    return Math.max(1, Math.min(lim.images.maxCount || 5, 10));
+  }
+
+  // ---- vérification : fiche de fab ----
+  const EXTRACT = (a, b, n) => `Tu lis des fiches d'atelier (fiches de fabrication) imprimées par le logiciel de menuiserie ARCHIMEDE. Les ${n} images jointes sont les pages ${a} à ${b} du document (photos ou PDF).
+Chaque position occupe en général 2 pages : la première porte la configuration (Configuration, Pacloses, Seuil, Moulures, Vitrages et panneaux, Quincaillerie, Charnières, Couleur poignée, Hauteur poignée, Accessoires, VMC, rainures R003…), la seconde liste les pièces du dormant et des ouvrants avec « Dormant Ext (LrxHa) : L x H ». Le numéro de position est en haut à droite (« : _ 8 »), le sens (OB DTE, OF GCH…) aussi.
+Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d'objets. Omets un champ que tu ne vois pas sur ces pages ; ne devine rien et recopie les valeurs telles qu'écrites :
+[{"pos":"8","refClient":"Me09 - Escalier","quantite":2,"sens":"OF GCH","configuration":"RT 68 WINDOR 4 - MONO","seuil":"BOIS","dormantL":670,"dormantH":710,"ouvrants":[{"L":584,"H":624,"traverseInfLarg":85}],"vitrages":["4/20/4LowE Argon WE Noir 466 x 486"],"panneaux":[],"quincaillerie":"001 - STANDARD JEU 4","couleurPoignee":"F9 INOX","hauteurPoignee":200,"accessoires":["JET EAU FENETRE 18 X 25"],"vmc":false,"rainures":"R003 sur 4C (en reprise sur TB)","semaineLivraison":"-1","autres":"tout autre détail utile"}]`;
+
+  const COMPARE = (o, fab) => `Tu contrôles la saisie d'une commande de menuiseries bois dans le logiciel ARCHIMEDE, avant son lancement en atelier. Compare l'ARC (ce que le client a commandé) avec les fiches de fabrication (ce qui a été saisi), position par position, et signale chaque écart.
+
+RÈGLES DE L'ENTREPRISE :
+- Sur l'ARC, les cotes sont écrites H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de FABRICATION de l'ARC avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
+- Un jet d'eau est obligatoire sur toutes les menuiseries.
+- « Semaine de livraison : -1 » est voulu : ne le signale pas.
+- « - MONO » dans la configuration = dormant monobloc.
+- OB = oscillo-battant, OF = ouvrant à la française. GT/GCH = gauche tirant, DT/DTE = droite tirant, VP D = vantail principal à droite.
+- Vérifie aussi : quantités, nombre de vantaux, seuil (alu RPT ou bois), pièces d'appui (PA), traverses basses de 135, hauteur d'allège, VMC (oui/non), quincaillerie et fiches spécifiées, couleur des poignées, vitrage, altitude, rainures, notes manuscrites de l'ARC.
+- Les positions de l'ARC et d'ARCHIMEDE peuvent être numérotées différemment : rapproche-les par la référence client (Me01…), le type et les cotes.
+- Une information absente des fiches (page manquante) est « à vérifier », pas une erreur.
+
+ARC (fiche de saisie) :
+${JSON.stringify({arc:o.arc, client:o.client, chantier:o.chantier, entete:o.entete, colonnes:o.positions && o.positions.head, positions:o.positions && o.positions.rows})}
+
+FICHES DE FABRICATION (extraites) :
+${JSON.stringify(fab)}
+
+Réponds uniquement avec un objet JSON de cette forme (textes en français, courts et concrets) :
+{"issues":[{"niveau":"erreur","titre":"Position 8 (Me09 Escalier) : hauteur et largeur inversées","texte":"Ce qui ne va pas, en une ou deux phrases.","compare":[{"label":"ARC demande","val":"H 670 × L 710"},{"label":"Fiche de fab","val":"H 710 × L 670","bad":true}],"action":"Ce qu'il faut faire dans ARCHIMEDE.","choix":["Corrigé","Validé tel quel"]}],
+"ok":["Point conforme, court"],
+"positions":[{"pos":"8","ref":"Me09 Escalier","arc":"H 670 × L 710","fab":"H 710 × L 670","sensArc":"OF GT","sensFab":"OF GCH","statut":"ERREUR"}]}
+"niveau" vaut "erreur" (écart certain) ou "verifier" (doute, information manquante). "statut" vaut "OK", "À vérifier" ou "ERREUR". Une ligne "positions" par position de l'ARC. Si tout est conforme, "issues" est un tableau vide.`;
+
+  function cleanReport(r, run){
+    const arr = x => Array.isArray(x) ? x : [];
+    const issues = arr(r && r.issues).map((x,i) => ({
+      id: run + '-' + i,
+      niveau: x && x.niveau === 'erreur' ? 'erreur' : 'verifier',
+      titre: S(x && x.titre) || 'Point à vérifier',
+      texte: S(x && x.texte), action: S(x && x.action),
+      compare: arr(x && x.compare).slice(0,4).map(c => ({label:S(c && c.label), val:S(c && c.val), bad:!!(c && c.bad)})),
+      choix: arr(x && x.choix).map(S).filter(Boolean).slice(0,4)
+    }));
+    const st = {'OK':null, 'À vérifier':'verifier', 'ERREUR':'erreur'};
+    const pos = arr(r && r.positions);
+    const rows = pos.map(p => {
+      const s = S(p && p.statut); const cls = s in st ? st[s] : 'verifier';
+      const cells = [p.pos, p.ref, p.arc, p.fab, p.sensArc, p.sensFab, s || 'À vérifier'].map(S);
+      return cls ? {cells, statut:cls} : cells;
+    });
+    return {
+      issues, ok: arr(r && r.ok).map(S).filter(Boolean),
+      posOk: pos.filter(p => S(p && p.statut) === 'OK').length,
+      positions: {head:['Pos','Réf.','ARC H × L','Fab H × L','Sens ARC','Sens fab','Statut'], mono:[2,3], rows}
+    };
+  }
+
+  async function runVerification(o, files){
+    const ctl = new AbortController();
+    busy = {id:o.id, ctl, status:'Préparation…', err:false};
+    const say = (t, err) => { busy.status = t; busy.err = !!err; const el = document.getElementById('st-' + o.id); if (el){ el.textContent = t; el.className = 'status' + (err ? ' err' : ''); } };
+    renderList(); renderSheet();
+    try {
+      const per = await imageBudget();
+      const imgs = await filesToImages(files, say);
+      if (ctl.signal.aborted) throw {code:'cancelled'};
+      say('Enregistrement des fichiers…');
+      const fichiers = await keepFiles(files);
+      const fab = [];
+      for (let i = 0; i < imgs.length; i += per){
+        const chunk = imgs.slice(i, i + per);
+        const a = i + 1, b = i + chunk.length;
+        say('Claude lit les pages ' + a + ' à ' + b + ' sur ' + imgs.length + '…');
+        const part = await sample.json(EXTRACT(a, b, chunk.length), {images: chunk, signal: ctl.signal});
+        if (Array.isArray(part)) fab.push(...part.filter(x => x && typeof x === 'object'));
+      }
+      // Une position peut s'étaler sur deux paquets de pages : on fusionne par numéro
+      const byPos = {};
+      for (const p of fab){ const k = S(p.pos) || ('?' + Object.keys(byPos).length); byPos[k] = Object.assign(byPos[k] || {}, p); }
+      const merged = Object.values(byPos);
+      say('Claude compare avec l\'ARC…');
+      const rep = await sample.json(COMPARE(o, merged), {signal: ctl.signal, modelTier:'complex', cache:false});
+      const run = 'v' + Date.now().toString(36);
+      const d = new Date();
+      const verif = Object.assign(cleanReport(rep, run), {
+        date: d.toLocaleDateString('fr-FR'), fab: merged, fichiers, pages: imgs.length
+      });
+      const docBody = JSON.parse(JSON.stringify(Object.assign({}, o)));
+      delete docBody.id; docBody.verif = verif;
+      await db.doc('commandes/' + o.id).set(docBody);
+      busy = null; $('#saved').textContent = 'Vérification enregistrée.';
+    } catch (e){
+      const msg = e && e.code ? sampleMsg(e) : (e && e.message === 'script' ? "Le lecteur de PDF n'a pas pu se charger. Prenez plutôt les pages en photo." : "La vérification a échoué : " + (e && e.message || 'erreur inconnue') + '.');
+      busy = {id:o.id, status:msg, err:true, done:true};
+    }
+    renderList(); renderSheet();
+  }
+
+  function fabBox(o){
+    const c = ctrl(o);
+    const running = busy && busy.id === o.id && !busy.done;
+    const input = h('input',{type:'file', id:'fab-' + o.id, accept:'application/pdf,image/*', multiple:true, hidden:true,
+      onchange: ev => { const f = [...ev.target.files]; if (f.length) runVerification(o, f); }});
+    const box = h('div',{class:'action'},
+      h('h3',null, c ? 'Nouvelle vérification' : 'Vérifier avec la fiche de fab'),
+      h('p',{class:'foot'}, 'Joignez la fiche de fab imprimée par ARCHIMEDE : le PDF, ou une photo par page. Claude la lit et la compare à l\'ARC ci-dessous.'),
+      input,
+      h('div',{class:'row'},
+        h('button',{class:'btn', type:'button', disabled: running || !sample || !db, onclick:() => input.click()},
+          c ? 'Joindre une nouvelle fiche de fab' : 'Joindre la fiche de fab'),
+        running ? h('button',{class:'btn ghost', type:'button', onclick:() => busy.ctl && busy.ctl.abort()}, 'Arrêter') : null),
+      h('p',{class:'status' + (busy && busy.id === o.id && busy.err ? ' err' : ''), id:'st-' + o.id, 'aria-live':'polite'},
+        busy && busy.id === o.id ? busy.status : (!sample ? "La lecture par Claude n'est pas disponible ici. Envoyez la fiche de fab à Claude dans la conversation." : '')));
+    if (c && c.fichiers && c.fichiers.length) box.append(h('p',{class:'files'}, 'Fiche contrôlée : ',
+      c.fichiers.map((f,i) => [i ? ', ' : '', h('a',{href:'/_blob/' + f.id, target:'_blank', rel:'noopener'}, f.nom)])));
+    return box;
+  }
+
+  // ---- nouvelle commande ----
+  const ARC_PROMPT = n => `Les ${n} images jointes sont un ARC (accusé de réception de commande) de menuiseries bois de l'entreprise Menuiserie Savoyarde, parfois annoté à la main. Recopie son contenu pour préparer la saisie dans le logiciel ARCHIMEDE.
+Réponds uniquement avec un objet JSON de cette forme :
+{"arc":"5345 NG","client":"BFM","projet":"Merlin","chantier":"Col du Joly","gamme":"RT68 PIN SYLVESTRE",
+"entete":["Pose en applique, cochonnet 30","Dormant 68 × 80","Traitement IFH, finition chantier sous 3 mois","Vitrage Ug 1,1 argon WE noir, altitude 2000 m","Délai : semaine 46","Poignées ATLANTA aspect inox F9","Annotation manuscrite : …"],
+"positions":[{"pos":"1","ref":"Me01 - Séjour","type":"PF 2 vantaux","ofob":"OF","sens":"VP D","vmc":"","tableau":"2020 × 1230","fab":"2070 × 1330","qte":1,"particularites":"TB 135, verrou de semi-fixe, crémone simple poignée INT, seuil alu RPT"}]}
+Règles : les cotes de l'ARC sont écrites « H … × … » (hauteur d'abord) : recopie-les dans le même ordre, sans le « H ». "ofob" vaut "OB" si la colonne OB est cochée, "Fixe" pour un châssis fixe, sinon "OF". "vmc" vaut "oui" si la colonne VMC est cochée, sinon "". Mets dans "entete" chaque information générale (pose, cochonnet, traitement, dormant, vitrage, altitude, délai, informations, poignées, livraison, annotations manuscrites générales). Mets dans "particularites" les annotations manuscrites de la ligne. Ne devine rien : laisse vide ce qui est illisible.`;
+
+  let newFiles = [];
+  function newOrderForm(){
+    const running = busy && busy.id === 'nouvelle' && !busy.done;
+    const num = h('input',{type:'text', id:'new-num', placeholder:'ex. 1035', inputmode:'numeric'});
+    const picked = h('p',{class:'picked'}, newFiles.length ? newFiles.length + ' fichier(s) choisi(s) : ' + newFiles.map(f => f.name).join(', ') : 'Aucun fichier choisi.');
+    const input = h('input',{type:'file', id:'new-arc', accept:'application/pdf,image/*', multiple:true, hidden:true,
+      onchange: ev => { newFiles = [...ev.target.files]; picked.textContent = newFiles.length + ' fichier(s) choisi(s) : ' + newFiles.map(f => f.name).join(', '); go.disabled = !newFiles.length || running; }});
+    const go = h('button',{class:'btn', type:'button', disabled: !newFiles.length || running || !sample || !db,
+      onclick:() => createOrder(num.value.trim())}, 'Créer la commande');
+    return h('article',{class:'sheet'},
+      h('div',{class:'top'}, h('div',null, h('h2',null,'Nouvelle commande'), h('div',{class:'meta'},"Claude lit l'ARC et prépare la fiche de saisie. Vous joindrez ensuite la fiche de fab pour la vérification."))),
+      h('div',{class:'action'},
+        h('label',{class:'field'}, 'N° de commande ARCHIMEDE (facultatif)', num),
+        h('div',{class:'field'}, "ARC : photo(s) ou PDF", input,
+          h('div',{class:'row'}, h('button',{class:'btn ghost', type:'button', onclick:() => input.click()}, "Choisir l'ARC"), picked)),
+        h('div',{class:'row'}, go,
+          running ? h('button',{class:'btn ghost', type:'button', onclick:() => busy.ctl && busy.ctl.abort()}, 'Arrêter') : null),
+        h('p',{class:'status' + (busy && busy.id === 'nouvelle' && busy.err ? ' err' : ''), id:'st-nouvelle', 'aria-live':'polite'},
+          busy && busy.id === 'nouvelle' ? busy.status : (!sample ? "La lecture par Claude n'est pas disponible ici. Envoyez l'ARC à Claude dans la conversation." : ''))));
+  }
+
+  async function createOrder(num){
+    const ctl = new AbortController();
+    busy = {id:'nouvelle', ctl, status:'Préparation…', err:false};
+    const say = t => { busy.status = t; const el = document.getElementById('st-nouvelle'); if (el){ el.textContent = t; el.className = 'status'; } };
+    renderSheet();
+    try {
+      const per = await imageBudget();
+      const imgs = await filesToImages(newFiles, say);
+      if (imgs.length > per) throw {code:'image_rejected'};
+      say("Claude lit l'ARC…");
+      const r = await sample.json(ARC_PROMPT(imgs.length), {images: imgs, signal: ctl.signal, cache:false});
+      say('Enregistrement…');
+      const fichiers = await keepFiles(newFiles);
+      const rows = (Array.isArray(r && r.positions) ? r.positions : []).map(p => [p.pos, p.ref, p.type, p.ofob, p.sens, p.vmc, p.tableau, p.fab, p.qte, p.particularites].map(S));
+      const arc = S(r && r.arc);
+      let id = (num || arc.split(' ')[0] || ('c' + Date.now().toString(36))).replace(/[^A-Za-z0-9-]/g,'') || ('c' + Date.now().toString(36));
+      while (orders.some(x => x.id === id)) id += '-2';
+      const doc = {
+        num: num || '', type:'saisie', ordre: Date.now(),
+        titreCourt: num ? 'Commande ' + num : 'ARC ' + arc,
+        titre: num ? 'Commande ' + num + ' · ARC ' + arc : 'Fiche de saisie : ARC ' + arc,
+        meta: ['ARC ' + arc, 'Client ' + S(r.client), [r.projet, r.chantier].filter(Boolean).join(', '), S(r.gamme), rows.length + ' positions'].filter(x => x && !/^(ARC|Client) $/.test(x)).join(' · '),
+        arc, client: S(r.client), chantier: [r.projet, r.chantier].filter(Boolean).join(', '),
+        entete: (Array.isArray(r.entete) ? r.entete : []).map(S).filter(Boolean),
+        positions: {head:['Pos','Réf.','Type','OF/OB','Sens','VMC','Tableau H × L','Fab H × L','Qté','Particularités'], mono:[0,6,7], checkCols:['Saisi','Vérifié'],
+          foot:"Sur l'ARC, la hauteur est donnée en premier (H × L).", rows},
+        arcFichiers: fichiers,
+        signatures:['Saisie le','Vérifiée par','Commande éditée le']
+      };
+      await db.doc('commandes/' + id).set(doc);
+      busy = null; newFiles = [];
+      location.hash = 'c-' + id;
+    } catch (e){
+      busy = {id:'nouvelle', status: e && e.code === 'image_rejected' ? "L'ARC a trop de pages : gardez seulement les pages utiles." : sampleMsg(e), err:true, done:true};
+      renderSheet();
+    }
+  }
+
   function route(){
-    const m = location.hash.match(/^#c-([A-Za-z0-9-]+)$/);
-    current = m ? m[1] : (orders[0] && orders[0].id) || null;
+    if (location.hash === '#nouvelle') current = 'nouvelle';
+    else {
+      const m = location.hash.match(/^#c-([A-Za-z0-9-]+)$/);
+      current = m ? m[1] : (orders[0] && orders[0].id) || null;
+    }
     renderList(); renderSheet();
   }
   window.addEventListener('hashchange', route);
 
   (async () => {
-    db = window.claude ? await window.claude.use('db') : null;
+    if (!window.claude){ $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Ouvrez cette page depuis claude.ai.'))); return; }
+    [db, sample, assets] = await Promise.all(['db','sample','assets'].map(n => window.claude.use(n).catch(() => null)));
     if (!db){
       $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Les commandes ne peuvent pas être chargées ici.'),
         h('p',null,'Ouvrez cette page depuis claude.ai en étant connecté.')));
@@ -290,6 +571,8 @@ td.ck{text-align:center}
     db.collection('commandes').onSnapshot(snap => {
       orders = snap.docs.map(d => Object.assign({id:d.id}, d.data()))
         .sort((a,b) => (b.ordre||0) - (a.ordre||0));
+      const active = document.activeElement;
+      if (active && active.tagName === 'INPUT' && active.type === 'text'){ renderList(); return; }
       route();
     }, () => { $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Connexion aux commandes interrompue.'), h('p',null,'Rechargez la page.'))); });
     db.collection('etats').onSnapshot(snap => {
