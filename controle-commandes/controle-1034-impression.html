@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Contrôle 1034</title>
+<style>
+@page{size:A4;margin:10mm 11mm 10mm}
+*{box-sizing:border-box}
+body{font-family:"DejaVu Sans",Arial,sans-serif;font-size:9.2pt;color:#111;margin:0;line-height:1.25}
+h1{font-size:17pt;margin:0}
+h2{font-size:11pt;margin:8px 0 5px;border-bottom:1.5px solid #111;padding-bottom:2px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #111;padding-bottom:6px}
+.meta{font-size:9pt;color:#444}
+.score{display:flex;gap:6px;margin-top:8px}
+.score span{border:1.5px solid;padding:3px 10px;border-radius:4px;font-weight:700}
+.r{color:#b3261e;border-color:#b3261e} .a{color:#8a5a00;border-color:#c48a00} .g{color:#2b7247;border-color:#2b7247}
+.issue{border:1px solid #999;border-left:7px solid;border-radius:4px;padding:5px 9px;margin-bottom:5px;break-inside:avoid}
+.issue.red{border-left-color:#b3261e} .issue.amber{border-left-color:#c48a00}
+.issue h3{margin:0 0 3px;font-size:10.5pt}
+.issue p{margin:2px 0}
+.lbl{font-size:8pt;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;color:#fff}
+.lbl.red{background:#b3261e} .lbl.amber{background:#a06a00}
+.todo{font-weight:700}
+.todo::before{content:"→ "}
+.check{display:inline-block;width:11px;height:11px;border:1.2px solid #111;margin-right:5px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:8.2pt}
+th,td{border:1px solid #888;padding:2px 5px;text-align:left;vertical-align:top}
+th{background:#e8e8e8;font-size:7.8pt;text-transform:uppercase}
+td.n{font-family:"DejaVu Sans Mono",monospace;white-space:nowrap}
+tr.hl td{background:#fde3e0;font-weight:700}
+.cols{display:flex;gap:10px}
+.cols>*{flex:1}
+.ok{columns:2;font-size:9pt;margin:0;padding-left:16px}
+.ok li{margin:1px 0}
+.sign{display:flex;gap:16px;margin-top:10px;font-size:9pt}
+.sign div{flex:1;border-top:1px solid #111;padding-top:3px}
+.foot{font-size:8pt;color:#444;margin-top:4px}
+.pb{break-before:page}
+</style></head><body>
+
+<div class="top">
+  <div><h1>Contrôle de saisie : commande 1034</h1>
+  <div class="meta">ARC 5290 NG · Client BMA · Dupont-Roc 3, Thônes · Lancement 26_S40 WINDORFLEX · 14 positions, 15 menuiseries</div></div>
+  <div class="meta">Contrôlé le ____ / ____ par ______</div>
+</div>
+<div class="score"><span class="r">1 ERREUR</span><span class="a">3 À VÉRIFIER</span><span class="g">12 POSITIONS OK</span></div>
+
+<h2>À traiter</h2>
+
+<div class="issue red">
+  <h3><span class="lbl red">ERREUR</span>Position 8 (Me09 Escalier, ×2) : hauteur et largeur inversées</h3>
+  <p>ARC : <b>H 670 × L 710</b> &nbsp;|&nbsp; Fabriqué : <b>H 710 × L 670</b>. Déjà en finition à l'atelier.</p>
+  <p class="todo">Faire valider par le poseur, ou refaire les 2 fenêtres et recommander le vitrage 506 × 446.</p>
+  <table style="margin-top:4px">
+    <tr><th>Pièce (×2)</th><th>Dorm. montants</th><th>Dorm. traverses</th><th>Ouv. montants</th><th>Ouv. traverses</th><th>Vitrage L×H</th><th>Jet d'eau</th><th>Parcloses</th></tr>
+    <tr><td>Actuel</td><td class="n">598</td><td class="n">670</td><td class="n">624</td><td class="n">486</td><td class="n">466 × 486</td><td class="n">504</td><td class="n">494 / 474</td></tr>
+    <tr><td><b>Corrigé</b></td><td class="n"><b>558</b></td><td class="n"><b>710</b></td><td class="n"><b>584</b></td><td class="n"><b>526</b></td><td class="n"><b>506 × 446</b></td><td class="n"><b>544</b></td><td class="n"><b>454 / 514</b></td></tr>
+  </table>
+  <p class="foot">Cotes calculées avec les déductions de la saisie actuelle. Ce sont les documents d'ARCHIMEDE qui font foi.</p>
+  <p><span class="check"></span>Décision : ____________________________</p>
+</div>
+
+<div class="issue amber">
+  <h3><span class="lbl amber">À VÉRIFIER</span>PF 13 et 14 (Me02, Me10 Cuisine) : sans « MONO »</h3>
+  <p>L'ARC demande un dormant monobloc. Les positions 1 à 12 sont en RT 68 WINDOR 4 - MONO, les PF en RT 68 WINDOR 4.</p>
+  <p class="todo">Normal pour des PF en seuil alu, ou oubli ? &nbsp;<span class="check"></span>Normal &nbsp;<span class="check"></span>À corriger</p>
+</div>
+
+<div class="issue amber">
+  <h3><span class="lbl amber">À VÉRIFIER</span>Position 3 (Me04 Ch2) : usinage différent</h3>
+  <p>Moins de passes de l'outil 209 que les positions 4 et 5, qui sont identiques, et aucune sur la traverse basse du dormant. L'ARC demande une PA003.</p>
+  <p class="todo">Regarder l'option d'appui ou de rainure dans ARCHIMEDE. &nbsp;<span class="check"></span>OK &nbsp;<span class="check"></span>Corrigé</p>
+</div>
+
+<div class="issue amber">
+  <h3><span class="lbl amber">À VÉRIFIER</span>Position 4 (Me05 SdB) : dormant « NO DEGROSSISAGE »</h3>
+  <p>C'est la seule position usinée de cette façon, avec des tourillons en plus.</p>
+  <p class="todo">Peut-être voulu, à confirmer. &nbsp;<span class="check"></span>OK &nbsp;<span class="check"></span>Corrigé</p>
+</div>
+
+<h2>Conforme à l'ARC</h2>
+<ul class="ok">
+  <li>Cotes (sauf position 8)</li><li>OF / OB et sens d'ouverture</li><li>Vantail principal à droite</li>
+  <li>VMC sur 1, 2, 3, 5, 10, 11, 12</li><li>PA003 / PA103 (escalier)</li><li>TB 135 et panneau isolé sur les PF</li>
+  <li>Seuil alu RPT sur les PF</li><li>Jets d'eau sur toutes les menuiseries</li><li>Rainures R003 (4 côtés / 3 côtés)</li>
+  <li>Vitrage 4/20/4 argon WE noir, 19 vitrages</li><li>Parclose extérieure, poignées F9 inox</li><li>Fab = XML = débit (138 pièces)</li>
+</ul>
+
+<h2>Détail position par position</h2>
+<table>
+  <tr><th>Pos</th><th>Réf.</th><th>Fab ARC H × L</th><th>Saisie</th><th>Sens</th><th>VMC</th><th>Appui</th><th>Statut</th></tr>
+  <tr><td class="n">1</td><td>Me01 Séjour</td><td class="n">1270 × 1320</td><td>OK</td><td>OB VP/D</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">2</td><td>Me03 Ch1</td><td class="n">1270 × 1320</td><td>OK</td><td>OB VP/D</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">3</td><td>Me04 Ch2</td><td class="n">1270 × 920</td><td>OK</td><td>OB DT</td><td>oui</td><td>PA003</td><td>À vérifier</td></tr>
+  <tr><td class="n">4</td><td>Me05 SdB</td><td class="n">1270 × 920</td><td>OK</td><td>OB DT</td><td>–</td><td>PA003</td><td>À vérifier</td></tr>
+  <tr><td class="n">5</td><td>Me06 Ch3</td><td class="n">1270 × 920</td><td>OK</td><td>OB GT</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">6</td><td>Me07 Escalier</td><td class="n">1270 × 920</td><td>OK</td><td>OF GT</td><td>–</td><td>PA103</td><td>OK</td></tr>
+  <tr><td class="n">7</td><td>Me08 Escalier</td><td class="n">1270 × 920</td><td>OK</td><td>OF DT</td><td>–</td><td>PA103</td><td>OK</td></tr>
+  <tr class="hl"><td class="n">8</td><td>Me09 Escalier ×2</td><td class="n">670 × 710</td><td>710 × 670</td><td>OF GT</td><td>–</td><td>PA103</td><td>ERREUR</td></tr>
+  <tr><td class="n">9</td><td>Me11 SàM</td><td class="n">1170 × 1120</td><td>OK</td><td>OB GT</td><td>–</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">10</td><td>Me12 Séjour</td><td class="n">1170 × 1120</td><td>OK</td><td>OB DT</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">11</td><td>Me13 Ch2</td><td class="n">1170 × 1120</td><td>OK</td><td>OB GT</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">12</td><td>Me14 Ch1</td><td class="n">1060 × 920</td><td>OK</td><td>OB GT</td><td>oui</td><td>PA003</td><td>OK</td></tr>
+  <tr><td class="n">13</td><td>Me02 Cuisine</td><td class="n">2030 × 1920</td><td>OK</td><td>OB VP/D</td><td>–</td><td>Seuil alu</td><td>À vérifier</td></tr>
+  <tr><td class="n">14</td><td>Me10 Cuisine</td><td class="n">2110 × 1920</td><td>OK</td><td>OB VP/D</td><td>–</td><td>Seuil alu</td><td>À vérifier</td></tr>
+</table>
+
+<div class="sign"><div>Saisie corrigée le :</div><div>Vérifiée par :</div><div>Commande éditée le :</div></div>
+
+<!-- ============ PAGE 2 : FICHE DE SAISIE 5345 ============ -->
+<div class="pb top">
+  <div><h1>Fiche de saisie : ARC 5345 NG</h1>
+  <div class="meta">Client BFM · Projet Merlin · Col du Joly · RT68 pin sylvestre · 12 menuiseries</div></div>
+  <div class="meta">Saisie le ____ / ____ par ______</div>
+</div>
+
+<h2>En-tête</h2>
+<div class="cols">
+<div>
+  <p><span class="check"></span>Pose en <b>applique</b>, <b>cochonnet 30</b></p>
+  <p><span class="check"></span>Dormant 68 × 80</p>
+  <p><span class="check"></span>Traitement <b>IFH</b> (finition chantier sous 3 mois)</p>
+  <p><span class="check"></span>Vitrage Ug 1,1 argon WE noir, 4 lowE/20/4</p>
+  <p><span class="check"></span><b>Altitude 2000 m</b> sur les vitrages</p>
+</div>
+<div>
+  <p><span class="check"></span><b>AUCUNE VMC</b> (demande client)</p>
+  <p><span class="check"></span>Jet d'eau sur toutes les menuiseries</p>
+  <p><span class="check"></span>Poignées ATLANTA inox F9</p>
+  <p><span class="check"></span>Semaine -1 (semaine 46 sur l'ARC)</p>
+  <p><span class="check"></span>Note : « bien passer par Hauteluce »</p>
+</div>
+</div>
+
+<h2>Positions</h2>
+<table>
+  <tr><th>Pos</th><th>Type</th><th>OF/OB</th><th>Sens</th><th>Tableau H × L</th><th>Fab H × L</th><th>Particularités</th><th>Saisi</th><th>Vérifié</th></tr>
+  <tr><td class="n">1</td><td>PF 2 vtx</td><td>OF</td><td>VP D</td><td class="n">2020 × 1230</td><td class="n">2070 × 1330</td><td>TB 135, seuil alu RPT, verrou semi-fixe, crémone poignée INT</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">2</td><td>Châssis fixe</td><td>–</td><td>–</td><td class="n">2000 × 1250</td><td class="n">2050 × 1350</td><td>Vitrage dans dormant, TB 135 + PG16 (semblant de seuil alu)</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">3</td><td>PF 2 vtx</td><td>OF</td><td>VP D</td><td class="n">2010 × 1215</td><td class="n">2060 × 1315</td><td>TB 135, seuil alu RPT, verrou semi-fixe, crémone poignée INT</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">4</td><td>F 1 vtl</td><td>OF</td><td>GT</td><td class="n">590 × 590</td><td class="n">640 × 690</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">5</td><td>F 1 vtl</td><td>OF</td><td>DT</td><td class="n">590 × 590</td><td class="n">640 × 690</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">6</td><td>F 1 vtl</td><td><b>OB</b></td><td>DT</td><td class="n">590 × 590</td><td class="n">640 × 690</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">7</td><td>F 1 vtl</td><td><b>OB</b></td><td>GT</td><td class="n">700 × 890</td><td class="n">750 × 990</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">8</td><td>F 2 vtx</td><td>OF</td><td>VP D</td><td class="n">1480 × 1530</td><td class="n">1530 × 1630</td><td>PA 003, verrou semi-fixe</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">9</td><td>F 1 vtl</td><td>OF</td><td>GT</td><td class="n">500 × 500</td><td class="n">550 × 600</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">10</td><td>F 1 vtl</td><td>OF</td><td>DT</td><td class="n">530 × 530</td><td class="n">580 × 630</td><td>PA 003</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">11</td><td>F 1 vtl</td><td><b>OB</b></td><td>DT</td><td class="n">540 × 900</td><td class="n">590 × 1000</td><td>PA 003, fiches EXACTA 14, allège 3000</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+  <tr><td class="n">12</td><td>F 1 vtl</td><td><b>OB</b></td><td>GT</td><td class="n">560 × 1070</td><td class="n">610 × 1170</td><td>PA 003, fiches EXACTA 14, allège 3000</td><td><span class="check"></span></td><td><span class="check"></span></td></tr>
+</table>
+<p class="foot"><b>Attention : sur l'ARC, la hauteur est donnée en premier (H × L).</b> Sur cet ARC, la cote de fab = tableau +50 en hauteur et +100 en largeur, sur toutes les lignes.</p>
+
+<div class="sign"><div>Saisie le :</div><div>Vérifiée par :</div><div>Commande éditée le :</div></div>
+</body></html>
