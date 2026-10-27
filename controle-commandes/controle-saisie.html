@@ -420,7 +420,7 @@ RÈGLES DE L'ENTREPRISE :
 - Une position présente sur les fiches mais absente de l'ARC fourni est « à vérifier » (l'ARC a peut-être une autre page), pas une erreur.
 - Un jet d'eau est obligatoire sur toutes les menuiseries qui ont un ouvrant. Sans ouvrant (châssis fixe), pas de jet d'eau : c'est normal.
 - PG16 (semblant de seuil alu) : le dormant est saisi 3 mm plus court. Ajoute ces 3 mm avant de comparer : la cote hors tout (dormant + 3) doit être égale à celle de l'ARC.
-- Fiches : sans indication précise sur l'ARC, une fenêtre OF reçoit des fiches ANUBA 14. Ne signale pas ANUBA 14 sur un OF quand l'ARC ne précise rien.
+- Fiches : sur un OB, le champ « Charnières » est vide, c'est normal. Pour un ferrage symétrique, le champ est soit vide, soit « ### Ferrage symétrique » : les deux sont justes. Sans indication précise sur l'ARC, une fenêtre OF reçoit des fiches ANUBA 14. Ne signale pas ANUBA 14 sur un OF quand l'ARC ne précise rien.
 - « Semaine de livraison : -1 » est voulu : ne le signale pas.
 - « - MONO » dans la configuration = dormant monobloc.
 - OB = oscillo-battant, OF = ouvrant à la française. GT/GCH = gauche tirant, DT/DTE = droite tirant, VP D = vantail principal à droite.
@@ -682,8 +682,10 @@ Règles pour les cotes : lis l'en-tête de chaque colonne de cotes pour savoir c
       return;
     }
     db.collection('commandes').onSnapshot(snap => {
+      // Tri par numéro de commande croissant (1070 avant 1071) ; sans numéro, à la fin
+      const n = o => { const m = S(o.num || o.titreCourt).match(/\d+/); return m ? Number(m[0]) : Infinity; };
       orders = snap.docs.map(d => Object.assign({id:d.id}, d.data()))
-        .sort((a,b) => (b.ordre||0) - (a.ordre||0));
+        .sort((a,b) => (n(a) - n(b)) || ((a.ordre||0) - (b.ordre||0)));
       const active = document.activeElement;
       if (active && active.tagName === 'INPUT' && active.type === 'text'){ renderList(); return; }
       route();
