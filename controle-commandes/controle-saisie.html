@@ -390,7 +390,10 @@ Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d
   const COMPARE = (o, fab) => `Tu contrôles la saisie d'une commande de menuiseries bois dans le logiciel ARCHIMEDE, avant son lancement en atelier. Compare l'ARC (ce que le client a commandé) avec les fiches de fabrication (ce qui a été saisi), position par position, et signale chaque écart.
 
 RÈGLES DE L'ENTREPRISE :
-- Sur l'ARC, les cotes sont écrites H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de FABRICATION de l'ARC avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
+- Dans la fiche de saisie ci-dessous, les cotes de l'ARC sont toujours notées H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de fabrication attendue avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
+- Cote de fabrication attendue : si l'ARC donne une cote de fabrication imprimée, prends-la. Sinon, calcule-la à partir de la cote TABLEAU, en pose en applique : recouvrement = largeur du dormant (80) − cochonnet (indiqué dans l'en-tête, ex. 20 → 60). Largeur fab = largeur tableau + 2 × recouvrement. Hauteur fab = hauteur tableau + 1 × recouvrement, + 10 s'il y a une pièce d'appui (PA). Exemple, cochonnet 20 avec PA : tableau H 940 × L 1400 → fab H 1010 × L 1520. Une cote manuscrite « (manuscrit) » sert seulement de repère.
+- Les coulissants ne sont pas sur les fiches de fab : c'est normal, ignore-les.
+- Une position présente sur les fiches mais absente de l'ARC fourni est « à vérifier » (l'ARC a peut-être une autre page), pas une erreur.
 - Un jet d'eau est obligatoire sur toutes les menuiseries qui ont un ouvrant. Sans ouvrant (châssis fixe), pas de jet d'eau : c'est normal.
 - PG16 (semblant de seuil alu) : le dormant est saisi 3 mm plus court. Ajoute ces 3 mm avant de comparer : la cote hors tout (dormant + 3) doit être égale à celle de l'ARC.
 - Fiches : sans indication précise sur l'ARC, une fenêtre OF reçoit des fiches ANUBA 14. Ne signale pas ANUBA 14 sur un OF quand l'ARC ne précise rien.
@@ -512,8 +515,8 @@ Réponds uniquement avec un objet JSON de cette forme (textes en français, cour
 Réponds uniquement avec un objet JSON de cette forme :
 {"arc":"5345 NG","client":"BFM","projet":"Merlin","chantier":"Col du Joly","gamme":"RT68 PIN SYLVESTRE",
 "entete":["Pose en applique, cochonnet 30","Dormant 68 × 80","Traitement IFH, finition chantier sous 3 mois","Vitrage Ug 1,1 argon WE noir, altitude 2000 m","Délai : semaine 46","Poignées ATLANTA aspect inox F9","Annotation manuscrite : …"],
-"positions":[{"pos":"1","ref":"Me01 - Séjour","type":"PF 2 vantaux","ofob":"OF","sens":"VP D","vmc":"","tableau":"2020 × 1230","fab":"2070 × 1330","qte":1,"particularites":"TB 135, verrou de semi-fixe, crémone simple poignée INT, seuil alu RPT"}]}
-Règles : les cotes de l'ARC sont écrites « H … × … » (hauteur d'abord) : recopie-les dans le même ordre, sans le « H ». "ofob" vaut "OB" si la colonne OB est cochée, "Fixe" pour un châssis fixe, sinon "OF". "vmc" vaut "oui" si la colonne VMC est cochée, sinon "". Mets dans "entete" chaque information générale (pose, cochonnet, traitement, dormant, vitrage, altitude, délai, informations, poignées, livraison, annotations manuscrites générales). Mets dans "particularites" les annotations manuscrites de la ligne. Ne devine rien : laisse vide ce qui est illisible.`;
+"positions":[{"pos":"1","ref":"Me01 - Séjour","type":"PF 2 vantaux","ofob":"OF","sens":"VP D","vmc":"","tableauH":2020,"tableauL":1230,"fabH":2070,"fabL":1330,"fabSource":"imprimé","qte":1,"particularites":"TB 135, verrou de semi-fixe, crémone simple poignée INT, seuil alu RPT"}]}
+Règles pour les cotes : lis l'en-tête de chaque colonne de cotes pour savoir ce qu'elle contient (« TABLEAU », « FABRICATION », « COTES TABLEAU (HT X LG) », « Dos de dormant »…) et dans quel ordre (un « H » devant le premier nombre ou « HT X LG » = hauteur d'abord). Mets toujours la hauteur dans …H et la largeur dans …L. Si la seule colonne est une cote de fabrication ou de dos de dormant, remplis fabH/fabL et laisse tableauH/tableauL vides. Des cotes de fabrication écrites à la main en marge (souvent « H × L ») vont dans fabH/fabL avec "fabSource":"manuscrit" ; en cas de doute sur leur ordre, laisse-les vides. "ofob" vaut "OB" si la colonne OB est cochée, "Fixe" pour un châssis fixe, sinon "OF". "vmc" vaut "oui" si la colonne VMC est cochée, sinon "". Mets dans "entete" chaque information générale (pose, cochonnet, traitement, dormant, vitrage, altitude, délai, informations, poignées, livraison, annotations manuscrites générales). Mets dans "particularites" les annotations manuscrites de la ligne. Ne devine rien : laisse vide ce qui est illisible.`;
 
   let newFiles = [];
   function newOrderForm(){
@@ -549,7 +552,9 @@ Règles : les cotes de l'ARC sont écrites « H … × … » (hauteur d'abord) 
       const r = await sample.json(ARC_PROMPT(imgs.length), {images: imgs, signal: ctl.signal, cache:false});
       say('Enregistrement…');
       const fichiers = await keepFiles(newFiles);
-      const rows = (Array.isArray(r && r.positions) ? r.positions : []).map(p => [p.pos, p.ref, p.type, p.ofob, p.sens, p.vmc, p.tableau, p.fab, p.qte, p.particularites].map(S));
+      const dim = (a, b) => (a && b) ? S(a) + ' × ' + S(b) : '';
+      const rows = (Array.isArray(r && r.positions) ? r.positions : []).map(p => [p.pos, p.ref, p.type, p.ofob, p.sens, p.vmc,
+        dim(p.tableauH, p.tableauL), dim(p.fabH, p.fabL) + (p.fabH && p.fabSource === 'manuscrit' ? ' (manuscrit)' : ''), p.qte, p.particularites].map(S));
       const arc = S(r && r.arc);
       let id = (num || arc.split(' ')[0] || ('c' + Date.now().toString(36))).replace(/[^A-Za-z0-9-]/g,'') || ('c' + Date.now().toString(36));
       while (orders.some(x => x.id === id)) id += '-2';
