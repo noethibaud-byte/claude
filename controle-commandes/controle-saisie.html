@@ -107,6 +107,13 @@ td.ck{text-align:center}
   position:fixed;left:-12000px;top:0;width:794px;background:#fff;color:#111;font-size:13px}
 .pdf .sheet{box-shadow:none;padding:28px 34px}
 .pdf .ok{columns:auto}
+.pdf .tbl{overflow:visible}
+.pdf table{font-size:10px;width:100%}
+.pdf th{font-size:8.5px}
+.pdf th,.pdf td{padding:2px 4px}
+.pdf td.n{white-space:normal;font-size:9px}
+.pdf td.part{min-width:190px}
+td.part{min-width:160px}
 .pdf .box{display:inline-block;width:11px;height:11px;border:1.2px solid #111;margin-right:5px;vertical-align:-1px;text-align:center;line-height:10px;font-size:10px;font-weight:700}
 .pdf .val{display:inline-block;min-width:140px;border-bottom:1px dotted #8a8f8c;padding:1px 0}
 .printbtn{background:transparent;border:1.5px solid var(--rule);border-radius:5px;padding:6px 12px;font-weight:700;cursor:pointer;color:var(--fg)}
@@ -312,8 +319,15 @@ td.ck{text-align:center}
       h('tbody',null, (t.rows||[]).map((r,ri) => {
         const cells = Array.isArray(r) ? r : (r.cells || []);
         const cls = Array.isArray(r) ? null : r.statut;
+        // « FE02 - RDC » sous la position FE02 : on ne garde que « RDC »
+        const shown = cells.map((x,ci) => {
+          const s = S(x), p = S(cells[0]);
+          return (ci === 1 && /^R[ÉE]F/i.test(S((t.head||[])[1])) && p && s.startsWith(p + ' - ')) ? s.slice(p.length + 3) : s;
+        });
         return h('tr',{class:cls},
-          cells.map((x,ci) => h('td',{class:(t.mono||[]).includes(ci) ? 'n' : null}, S(x))),
+          shown.map((x,ci) => (t.mono||[]).includes(ci)
+            ? h('td',{class:'n'}, x.replace(/ × /g, '\u00a0×\u00a0'))
+            : h('td',{class:/^particularit/i.test(S((t.head||[])[ci])) ? 'part' : null}, x)),
           checkCols.map((col,ci) => {
             const key = 'p' + ri + '-' + ci;
             return h('td',{class:'ck'}, h('input',{type:'checkbox', 'aria-label': col + ' ligne ' + (ri+1),
