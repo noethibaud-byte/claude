@@ -423,6 +423,8 @@ RÈGLES DE L'ENTREPRISE :
 - Dans la fiche de saisie ci-dessous, les cotes de l'ARC sont toujours notées H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de fabrication attendue avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
 - Cote de fabrication attendue : si l'ARC donne une cote de fabrication imprimée, prends-la. Sinon, calcule-la à partir de la cote TABLEAU, en pose en applique : recouvrement = largeur du dormant (80) − cochonnet (indiqué dans l'en-tête, ex. 20 → 60). Largeur fab = largeur tableau + 2 × recouvrement. Hauteur fab = hauteur tableau + 1 × recouvrement, + 10 s'il y a une pièce d'appui (PA). Exemple, cochonnet 20 avec PA : tableau H 940 × L 1400 → fab H 1010 × L 1520. Une cote manuscrite « (manuscrit) » sert seulement de repère.
 - Les coulissants ne sont pas sur les fiches de fab : c'est normal, ignore-les.
+- Essence : la gamme de l'ARC donne l'essence (« PIN SYLVESTRE » = « Pin DKD » sur la fiche ; mélèze, chêne… doivent apparaître tels quels). Compare-la avec « Essence » sur chaque fiche : une essence différente est une ERREUR.
+- Une ligne de l'ARC suivie de lignes à 0,00 qui la détaillent (« composé de … ») n'a pas de fiche propre : ce sont les lignes de détail qui ont des fiches. Ce n'est pas une position manquante.
 - Quand la numérotation des fiches de fab diffère de celle de l'ARC, écris les deux dans chaque titre, ex. « Position 2 de l'ARC (fiche de fab 1071_5, Repère 4) ».
 - Petits bois : compte les verticaux et horizontaux sur le dessin et dans la nomenclature (MONTANT PETIT-B, TRAVERSE PETIT-B). n verticaux et m horizontaux donnent (n+1) × (m+1) champs.
 - Une position présente sur les fiches mais absente de l'ARC fourni est « à vérifier » (l'ARC a peut-être une autre page), pas une erreur.
@@ -447,7 +449,7 @@ RÈGLES DE L'ENTREPRISE :
 - Une information absente des fiches (page manquante) est « à vérifier », pas une erreur.
 
 ARC (fiche de saisie) :
-${JSON.stringify({arc:o.arc, client:o.client, chantier:o.chantier, entete:o.entete, colonnes:o.positions && o.positions.head, positions:o.positions && o.positions.rows})}
+${JSON.stringify({arc:o.arc, client:o.client, chantier:o.chantier, gamme:o.gamme || o.meta, entete:o.entete, colonnes:o.positions && o.positions.head, positions:o.positions && o.positions.rows})}
 
 FICHES DE FABRICATION (extraites) :
 ${JSON.stringify(fab)}
@@ -599,7 +601,7 @@ Règles pour les cotes : lis l'en-tête de chaque colonne de cotes pour savoir c
         titreCourt: num ? 'Commande ' + num : 'ARC ' + arc,
         titre: num ? 'Commande ' + num + ' · ARC ' + arc : 'Fiche de saisie : ARC ' + arc,
         meta: ['ARC ' + arc, 'Client ' + S(r.client), [r.projet, r.chantier].filter(Boolean).join(', '), S(r.gamme), rows.length + ' positions'].filter(x => x && !/^(ARC|Client) $/.test(x)).join(' · '),
-        arc, client: S(r.client), chantier: [r.projet, r.chantier].filter(Boolean).join(', '),
+        arc, client: S(r.client), chantier: [r.projet, r.chantier].filter(Boolean).join(', '), gamme: S(r.gamme),
         entete: (Array.isArray(r.entete) ? r.entete : []).map(S).filter(Boolean),
         positions: {head:['Pos','Réf.','Type','OF/OB','Sens','VMC','Tableau H × L','Fab H × L','Qté','Particularités'], mono:[0,6,7], checkCols:['Saisi','Vérifié'],
           foot:"Sur l'ARC, la hauteur est donnée en premier (H × L).", rows},
