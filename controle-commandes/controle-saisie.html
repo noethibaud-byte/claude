@@ -57,7 +57,7 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
 </header>
 
 <div class="alert">
-  <strong>Commande 1034 : 1 écart probable et 3 points à vérifier avant édition.</strong>
+  <strong>Commande 1034 : 1 écart probable et 2 points d'usinage à vérifier avant édition.</strong>
   <b>Position 8</b> (Me09, escalier, quantité 2) : l'ARC 5290 demande une fabrication H 670 × L 710, la saisie donne L 670 × H 710. La hauteur et la largeur semblent inversées. Détail dans le rapport ci-dessous.
 </div>
 
@@ -88,7 +88,8 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
         <label class="chk"><input type="checkbox" id="g3"><span>Traitement IFH saisi (pas IF__0)</span></label>
         <label class="chk"><input type="checkbox" id="g4"><span>Altitude 2000 m renseignée pour le vitrage</span></label>
         <label class="chk"><input type="checkbox" id="g5"><span>Couleur poignée / cache-fiche F9</span></label>
-        <label class="chk"><input type="checkbox" id="g6"><span>Semaine de livraison 46 renseignée</span></label>
+        <label class="chk"><input type="checkbox" id="g6"><span>Semaine de livraison laissée à -1 (semaine 46 sur l'ARC, à ne pas communiquer à l'atelier)</span></label>
+        <label class="chk"><input type="checkbox" id="g8"><span>Jet d'eau sur toutes les menuiseries</span></label>
         <label class="chk"><input type="checkbox" id="g7"><span>Note livraison : « Col du Joly, bien passer par Hauteluce ! »</span></label>
       </div>
     </div>
@@ -161,7 +162,7 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
       <li><span class="pill bad">Pos 8</span> L'ARC donne « H 670 × 710 », soit 670 de haut sur 710 de large. Partout ailleurs sur l'ARC, la hauteur est donnée en premier. La saisie a 670 de large sur 710 de haut (dormant, vitrage 466 × 486, débit). Il faut corriger la saisie, ou faire confirmer qu'il y a une faute sur l'ARC.</li>
       <li><span class="pill warn">Pos 3</span> Dans le XML d'usinage, cette fenêtre reçoit 11 passes de l'outil 209 (L136 R8, face 4), contre 15 pour les positions 4, 5 et 9 qui sont du même type. Elle n'en a aucune sur la traverse basse du dormant. Les positions 6, 7 et 8 (PA103) n'en ont pas non plus. L'ARC demande pourtant une PA003. Vérifier dans ARCHIMEDE l'option d'appui ou de rainure de cette position.</li>
       <li><span class="pill warn">Pos 4</span> C'est la seule position dont le dormant est usiné en « NO DEGROSSISAGE », avec des tourillons en plus. Elle est pourtant identique à la position 3 sur l'ARC, à part la VMC. Cet écart est peut-être voulu, à confirmer.</li>
-      <li><span class="pill warn">Jets d'eau</span> Une annotation « Jet d'eau » est écrite à la main sur les positions 6, 7, 9, 10, 11, 12 et 13. La saisie met un jet d'eau sur les 14 positions. Que signifie cette annotation : jet d'eau à ajouter, à retirer, ou point de contrôle ?</li>
+      <li><span class="pill ok">Jets d'eau</span> Les annotations sur l'ARC signalaient des jets d'eau manquants lors de la première vérification. La correction est faite : les 14 positions ont leur jet d'eau sur les fiches de fab (18 × 25 sur les fenêtres, 40 × 25 sur les PF). La règle est un jet d'eau sur toutes les menuiseries.</li>
       <li><span class="pill warn">Annotations</span> « Dormant monobloc » : rien sur les fiches de fab ne permet de le confirmer. « J4 » correspond probablement à la quincaillerie STANDARD JEU 4 saisie.</li>
     </ul>
   </div>
@@ -181,7 +182,7 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
         <tr><td>Jets d'eau et battues</td><td><span class="pill ok">Quantités OK</span></td><td>Le total par dimension est juste. Les lignes identiques sont regroupées : la colonne « Réf. » ne montre qu'une position (ex. « 754 × 2, réf. 4 » couvre deux fenêtres). Attention à l'étiquetage en atelier.</td></tr>
         <tr><td>Panneaux</td><td><span class="pill warn">À surveiller</span></td><td>Il n'y a qu'une ligne « POS 1034_14 », en quantité 4. Elle couvre en fait les 2 panneaux de la position 13 et les 2 de la position 14. La mention « Avec platebande » est manuscrite et n'apparaît pas dans les fiches de fab.</td></tr>
         <tr><td>Fiche seuil</td><td><span class="pill warn">Manquante</span></td><td>Le fichier « Seuil.pdf » est un scan de la liste des panneaux. Aucune fiche seuil alu n'a été fournie pour les positions 13 et 14.</td></tr>
-        <tr><td>Semaine de livraison</td><td><span class="pill bad">Non renseignée</span></td><td>Toutes les fiches de fab affichent « Semaine de livraison : -1 ». L'ARC demande la semaine 45.</td></tr>
+        <tr><td>Semaine de livraison</td><td><span class="pill ok">Volontaire</span></td><td>« -1 » sur les fiches de fab : la semaine est laissée vide exprès pour que l'atelier ne voie pas la date de livraison (semaine 45 sur l'ARC).</td></tr>
         <tr><td>Altitude vitrage</td><td><span class="pill ok">Conforme</span></td><td>Le champ « Alt. » est vide, ce qui est normal : l'ARC indique une altitude inférieure à 1100 m.</td></tr>
         <tr><td>VMC</td><td><span class="pill ok">Conforme à l'ARC</span></td><td>La VMC est sur les positions 1, 2, 3, 5, 10, 11 et 12, comme sur l'ARC. Le XML le confirme : la mortaise (outil 211) est usinée sur ces 7 positions seulement.</td></tr>
         <tr><td>Récap : total fenêtres</td><td><span class="pill warn">À vérifier</span></td><td>Le récap indique 16 fenêtres, alors que l'ARC et notre comptage en donnent 15.</td></tr>
@@ -213,7 +214,8 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
         <li>Traverses basses 135, hauteur d'allège</li>
         <li>Quincaillerie spécifiée (fiches, crémone, poignées, couleur)</li>
         <li>Vitrage, Ug, gaz, intercalaire, altitude</li>
-        <li>VMC, finition, semaine de livraison, notes</li>
+        <li>VMC, finition, notes</li>
+        <li>Jet d'eau sur toutes les menuiseries</li>
       </ul>
     </div>
     <div class="card">
@@ -224,7 +226,7 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offse
         <li>Nombre de vitrages et de panneaux ↔ fiches de fab</li>
         <li>Parcloses, jets d'eau, battues par position</li>
         <li>Présence de chaque feuille attendue (seuil, accessoires…)</li>
-        <li>Champs vides : semaine, altitude, chantier</li>
+        <li>Champs vides : altitude, chantier (semaine de livraison à -1 volontaire)</li>
       </ul>
     </div>
   </div>
