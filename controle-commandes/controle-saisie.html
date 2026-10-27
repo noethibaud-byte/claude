@@ -1,227 +1,304 @@
 <title>Contrôle saisie ARCHIMEDE</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout : une colonne. En haut le verdict, puis une carte par problème, puis le reste replié */
+/* Layout : liste des commandes en haut, puis la feuille de contrôle façon impression A4 */
 :root{
-  --bg:#f4f5f3; --paper:#ffffff; --fg:#1b211e; --muted:#5f6b65; --line:#dde2df;
+  --bg:#e9ebe8; --paper:#ffffff; --fg:#111111; --muted:#555c58; --rule:#111111; --cell:#8a8f8c; --head:#e8e8e8;
   --accent:#2f6b4f;
-  --red:#b3261e; --red-bg:#fdecea; --red-line:#f1b8b2;
-  --amber:#8a5a00; --amber-bg:#fff4dc; --amber-line:#efd49a;
-  --green:#2b7247; --green-bg:#e6f4ea; --green-line:#b5dcc1;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --red:#b3261e; --red-bg:#fde3e0;
+  --amber:#a06a00; --amber-line:#c48a00; --amber-bg:#fff2d6;
+  --green:#2b7247; --green-bg:#e3f2e8;
+  --done:#9aa19d;
+  --sans:"DejaVu Sans",Arial,"Helvetica Neue",sans-serif;
+  --mono:"DejaVu Sans Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121614; --paper:#1b211e; --fg:#e6ece9; --muted:#9aa7a0; --line:#2e3833; --accent:#7cc3a0;
-  --red:#ff8a80; --red-bg:#3a1f1c; --red-line:#6b2f29;
-  --amber:#f2c063; --amber-bg:#352a14; --amber-line:#5f4a1c;
-  --green:#7fd19b; --green-bg:#1b3124; --green-line:#2f5a3e; color-scheme:dark}}
+  --bg:#121513; --paper:#1c201e; --fg:#ecefed; --muted:#a3aba7; --rule:#d8ddda; --cell:#4a524e; --head:#262b28;
+  --accent:#7cc3a0; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
+  --green:#7fd19b; --green-bg:#1b3124; --done:#5d6661; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121614; --paper:#1b211e; --fg:#e6ece9; --muted:#9aa7a0; --line:#2e3833; --accent:#7cc3a0;
-  --red:#ff8a80; --red-bg:#3a1f1c; --red-line:#6b2f29;
-  --amber:#f2c063; --amber-bg:#352a14; --amber-line:#5f4a1c;
-  --green:#7fd19b; --green-bg:#1b3124; --green-line:#2f5a3e; color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.5}
-.wrap{max-width:760px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+  --bg:#121513; --paper:#1c201e; --fg:#ecefed; --muted:#a3aba7; --rule:#d8ddda; --cell:#4a524e; --head:#262b28;
+  --accent:#7cc3a0; --red:#ff8a80; --red-bg:#3d211e; --amber:#f2c063; --amber-line:#c99a3a; --amber-bg:#352a14;
+  --green:#7fd19b; --green-bg:#1b3124; --done:#5d6661; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.4}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
 h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
 p{margin:0}
-.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font-size:2rem;font-weight:700}
-.sub{color:var(--muted)}
-.score{display:flex;flex-wrap:wrap;gap:10px}
-.score span{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-weight:600;border:1px solid}
-.score b{font-family:var(--mono);font-size:1.3rem}
-.s-red{background:var(--red-bg);color:var(--red);border-color:var(--red-line)}
-.s-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
-.s-green{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
-section{display:flex;flex-direction:column;gap:12px}
-h2{font-size:1.15rem;font-weight:700}
-.issue{background:var(--paper);border:1px solid var(--line);border-left:6px solid;border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
-.issue.red{border-left-color:var(--red)} .issue.amber{border-left-color:var(--amber)}
-.issue-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
-.issue h3{font-size:1.1rem}
-.tag{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:999px;letter-spacing:.03em;white-space:nowrap}
-.tag.red{background:var(--red-bg);color:var(--red)} .tag.amber{background:var(--amber-bg);color:var(--amber)} .tag.green{background:var(--green-bg);color:var(--green)}
-.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.cmp div{border:1px solid var(--line);border-radius:6px;padding:8px 12px}
-.cmp small{display:block;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
-.cmp strong{font-family:var(--mono);font-size:1.15rem}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Liste des commandes */
+.list-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.list-head h1{font-size:1.3rem}
+.list-head span{color:var(--muted);font-size:.85rem}
+.orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.order{background:var(--paper);border:1.5px solid var(--cell);border-radius:6px;padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-width:0}
+.order[aria-current="true"]{border-color:var(--rule);box-shadow:inset 0 0 0 1.5px var(--rule)}
+.order b{font-size:1.05rem}
+.order small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:3px;border:1.2px solid}
+.c-red{color:var(--red);border-color:var(--red)} .c-amber{color:var(--amber);border-color:var(--amber-line)} .c-green{color:var(--green);border-color:var(--green)}
+.c-muted{color:var(--muted);border-color:var(--cell)}
+
+/* Feuille */
+.sheet{background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.18);padding:26px 28px 30px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--rule);padding-bottom:6px}
+.top h2{font-size:1.45rem}
+.meta{font-size:.82rem;color:var(--muted)}
+.score{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.score span{border:1.5px solid;padding:3px 10px;border-radius:4px;font-weight:700;font-size:.85rem}
+.sheet h3.sec{font-size:1rem;margin:12px 0 4px;border-bottom:1.5px solid var(--rule);padding-bottom:2px}
+.issue{border:1px solid var(--cell);border-left:7px solid;border-radius:4px;padding:7px 11px;display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.issue.erreur{border-left-color:var(--red)} .issue.verifier{border-left-color:var(--amber-line)}
+.issue.regle{border-left-color:var(--done)}
+.issue.regle .ititle{text-decoration:line-through;text-decoration-thickness:1px;color:var(--muted)}
+.ititle{font-weight:700;font-size:.95rem}
+.lbl{font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px;color:#fff;text-decoration:none;display:inline-block}
+.lbl.erreur{background:#b3261e} .lbl.verifier{background:#a06a00} .lbl.regle{background:#5f6763}
+.todo{font-weight:700}
+.todo::before{content:"→ "}
+.cmp{display:flex;gap:6px;flex-wrap:wrap}
+.cmp div{border:1px solid var(--cell);padding:3px 9px;border-radius:3px}
+.cmp small{display:block;font-size:.68rem;text-transform:uppercase;color:var(--muted)}
+.cmp strong{font-family:var(--mono)}
 .cmp .bad strong{color:var(--red)}
-.todo{font-weight:600}
-.todo::before{content:"→ ";color:var(--accent)}
-.okgrid{display:flex;flex-wrap:wrap;gap:8px}
-.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-line);border-radius:6px;padding:5px 10px;font-size:.9rem;font-weight:500}
-.ok::before{content:"✓ "}
-details{background:var(--paper);border:1px solid var(--line);border-radius:8px}
-summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style-position:inside}
-summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.inner{padding:0 18px 18px;display:flex;flex-direction:column;gap:12px}
-.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
-table{border-collapse:collapse;width:100%;font-size:.85rem}
-th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
-tr:last-child td{border-bottom:0}
-td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-tr.hl td{background:var(--red-bg)}
-ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
-label.chk{display:flex;gap:8px;align-items:flex-start}
-input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin-top:4px;flex:none}
-.foot{color:var(--muted);font-size:.85rem}
-@media (max-width:480px){.cmp{grid-template-columns:1fr}}
+.choices{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.choices label,.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:15px;height:15px;margin:0;flex:none}
+.note{width:100%;border:0;border-bottom:1px dotted var(--cell);background:transparent;padding:2px 0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{border:1px solid var(--cell);padding:3px 6px;text-align:left;vertical-align:top}
+th{background:var(--head);font-size:.68rem;text-transform:uppercase}
+td.n{font-family:var(--mono);white-space:nowrap}
+tr.erreur td{background:var(--red-bg);font-weight:700}
+tr.verifier td:last-child{color:var(--amber);font-weight:700}
+tr.corrige td{font-weight:700}
+td.ck{text-align:center}
+.ok{columns:2 220px;margin:0;padding-left:18px;font-size:.85rem}
+.entete{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 16px}
+.foot{font-size:.75rem;color:var(--muted)}
+.sign{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.sign label{flex:1 1 180px;border-top:1px solid var(--rule);padding-top:3px;font-size:.8rem;display:flex;flex-direction:column;gap:2px}
+.sign input{border:0;border-bottom:1px dotted var(--cell);background:transparent;padding:2px 0}
+.state{background:var(--paper);border:1px dashed var(--cell);border-radius:6px;padding:20px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.state b{color:var(--fg)}
+.saved{font-size:.75rem;color:var(--muted);min-height:1em}
+@media (max-width:520px){.sheet{padding:16px 14px 20px}}
 </style>
 
 <div class="wrap">
-
-<header style="display:flex;flex-direction:column;gap:10px">
-  <span class="eyebrow">Commande 1034 · ARC 5290 NG · BMA · Dupont-Roc 3</span>
-  <h1>Contrôle de saisie</h1>
-  <p class="sub">14 positions, 15 menuiseries, lancement 26_S40 WINDORFLEX.</p>
-  <div class="score">
-    <span class="s-red"><b>1</b> erreur</span>
-    <span class="s-amber"><b>3</b> à vérifier</span>
-    <span class="s-green"><b>12</b> positions OK</span>
+  <div class="list-head"><h1>Contrôle saisie ARCHIMEDE</h1><span id="count"></span></div>
+  <div class="orders" id="orders" role="list"></div>
+  <div id="main">
+    <div class="state"><b>Chargement des commandes…</b></div>
   </div>
-</header>
-
-<section>
-  <h2>À traiter</h2>
-
-  <article class="issue red">
-    <div class="issue-head"><span class="tag red">ERREUR</span><h3>Position 8 : hauteur et largeur inversées</h3></div>
-    <p>Me09 Escalier, fenêtre 1 vantail OF GT, quantité 2. <b>Déjà en finition à l'atelier.</b></p>
-    <div class="cmp">
-      <div><small>ARC demande</small><strong>H 670 × L 710</strong></div>
-      <div class="bad"><small>Fabriqué</small><strong>H 710 × L 670</strong></div>
-    </div>
-    <p class="todo">Voir avec le responsable : faire valider par le poseur, ou refaire les 2 fenêtres et recommander le vitrage (506 × 446).</p>
-    <details>
-      <summary>Cotes pour refaire la position 8</summary>
-      <div class="inner">
-        <div class="tbl"><table>
-          <thead><tr><th>Pièce (×2)</th><th>Actuel</th><th>Corrigé</th></tr></thead>
-          <tbody>
-            <tr><td>Dormant montants</td><td class="n">598</td><td class="n"><b>558</b></td></tr>
-            <tr><td>Dormant traverses haut et bas</td><td class="n">670</td><td class="n"><b>710</b></td></tr>
-            <tr><td>Ouvrant montants</td><td class="n">624</td><td class="n"><b>584</b></td></tr>
-            <tr><td>Ouvrant traverses</td><td class="n">486</td><td class="n"><b>526</b></td></tr>
-            <tr><td>Vitrage L × H</td><td class="n">466 × 486</td><td class="n"><b>506 × 446</b></td></tr>
-            <tr><td>Jet d'eau</td><td class="n">504</td><td class="n"><b>544</b></td></tr>
-            <tr><td>Parcloses</td><td class="n">494 / 474</td><td class="n"><b>454 / 514</b></td></tr>
-          </tbody>
-        </table></div>
-        <p class="foot">Calculées avec les déductions de la saisie actuelle. Ce sont les documents d'ARCHIMEDE qui font foi.</p>
-      </div>
-    </details>
-  </article>
-
-  <article class="issue amber">
-    <div class="issue-head"><span class="tag amber">À VÉRIFIER</span><h3>PF 13 et 14 : sans « MONO »</h3></div>
-    <p>L'ARC demande un dormant monobloc. Les positions 1 à 12 sont bien en <b>RT 68 WINDOR 4 - MONO</b>, mais les PF Me02 et Me10 sont en <b>RT 68 WINDOR 4</b>.</p>
-    <p class="todo">Normal pour des PF en seuil alu, ou oubli ?</p>
-  </article>
-
-  <article class="issue amber">
-    <div class="issue-head"><span class="tag amber">À VÉRIFIER</span><h3>Position 3 : usinage différent</h3></div>
-    <p>Me04 Ch2. Elle reçoit moins de passes de l'outil 209 que les positions 4 et 5, qui sont pourtant identiques, et aucune sur la traverse basse du dormant. L'ARC demande une PA003.</p>
-    <p class="todo">Regarder l'option d'appui ou de rainure dans ARCHIMEDE.</p>
-  </article>
-
-  <article class="issue amber">
-    <div class="issue-head"><span class="tag amber">À VÉRIFIER</span><h3>Position 4 : dormant « NO DEGROSSISAGE »</h3></div>
-    <p>Me05 SdB. C'est la seule position usinée de cette façon, avec des tourillons en plus.</p>
-    <p class="todo">Peut-être voulu, à confirmer.</p>
-  </article>
-</section>
-
-<section>
-  <h2>Vérifié, conforme à l'ARC</h2>
-  <div class="okgrid">
-    <span class="ok">Cotes (sauf pos 8)</span>
-    <span class="ok">OF / OB et sens</span>
-    <span class="ok">Vantail principal à droite</span>
-    <span class="ok">VMC sur 1, 2, 3, 5, 10, 11, 12</span>
-    <span class="ok">PA003 / PA103</span>
-    <span class="ok">TB 135 sur les PF</span>
-    <span class="ok">Soubassement panneau isolé</span>
-    <span class="ok">Seuil alu RPT</span>
-    <span class="ok">Jets d'eau partout</span>
-    <span class="ok">Rainures R003 (4C / 3C)</span>
-    <span class="ok">Vitrage 4/20/4 argon WE noir</span>
-    <span class="ok">Parclose extérieure</span>
-    <span class="ok">Poignées F9 inox</span>
-    <span class="ok">Fab = XML = débit (138 pièces)</span>
-    <span class="ok">19 vitrages</span>
-    <span class="ok">Semaine -1 (voulu)</span>
-  </div>
-</section>
-
-<details>
-  <summary>Détail position par position</summary>
-  <div class="inner">
-    <div class="tbl"><table>
-      <thead><tr><th>Pos</th><th>Réf.</th><th>Fab ARC H × L</th><th>Saisie</th><th>Sens</th><th>VMC</th><th>Appui</th></tr></thead>
-      <tbody>
-        <tr><td class="n">1</td><td>Me01 Séjour</td><td class="n">1270 × 1320</td><td>✓</td><td>OB VP/D</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">2</td><td>Me03 Ch1</td><td class="n">1270 × 1320</td><td>✓</td><td>OB VP/D</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">3</td><td>Me04 Ch2</td><td class="n">1270 × 920</td><td>✓</td><td>OB DT</td><td>oui</td><td>PA003 ⚠</td></tr>
-        <tr><td class="n">4</td><td>Me05 SdB</td><td class="n">1270 × 920</td><td>✓</td><td>OB DT</td><td>–</td><td>PA003 ⚠</td></tr>
-        <tr><td class="n">5</td><td>Me06 Ch3</td><td class="n">1270 × 920</td><td>✓</td><td>OB GT</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">6</td><td>Me07 Escalier</td><td class="n">1270 × 920</td><td>✓</td><td>OF GT</td><td>–</td><td>PA103</td></tr>
-        <tr><td class="n">7</td><td>Me08 Escalier</td><td class="n">1270 × 920</td><td>✓</td><td>OF DT</td><td>–</td><td>PA103</td></tr>
-        <tr class="hl"><td class="n">8</td><td>Me09 Escalier ×2</td><td class="n">670 × 710</td><td><b>710 × 670 ✗</b></td><td>OF GT</td><td>–</td><td>PA103</td></tr>
-        <tr><td class="n">9</td><td>Me11 SàM</td><td class="n">1170 × 1120</td><td>✓</td><td>OB GT</td><td>–</td><td>PA003</td></tr>
-        <tr><td class="n">10</td><td>Me12 Séjour</td><td class="n">1170 × 1120</td><td>✓</td><td>OB DT</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">11</td><td>Me13 Ch2</td><td class="n">1170 × 1120</td><td>✓</td><td>OB GT</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">12</td><td>Me14 Ch1</td><td class="n">1060 × 920</td><td>✓</td><td>OB GT</td><td>oui</td><td>PA003</td></tr>
-        <tr><td class="n">13</td><td>Me02 Cuisine</td><td class="n">2030 × 1920</td><td>✓</td><td>OB VP/D</td><td>–</td><td>Seuil alu ⚠</td></tr>
-        <tr><td class="n">14</td><td>Me10 Cuisine</td><td class="n">2110 × 1920</td><td>✓</td><td>OB VP/D</td><td>–</td><td>Seuil alu ⚠</td></tr>
-      </tbody>
-    </table></div>
-    <p class="foot">Sur cet ARC, la cote de fab = tableau +60 en hauteur et +120 en largeur.</p>
-  </div>
-</details>
-
-<details>
-  <summary>Fiche de saisie : ARC 5345 (BFM, Merlin)</summary>
-  <div class="inner">
-    <ul>
-      <li>Pose en applique, cochonnet 30. Dormant 68 × 80, RT68 pin sylvestre.</li>
-      <li>Traitement <b>IFH</b>. Vitrage Ug 1,1 argon WE noir, <b>altitude 2000 m</b>.</li>
-      <li><b>Aucune VMC</b> (demande client). Jet d'eau sur toutes les menuiseries.</li>
-      <li>Poignées ATLANTA inox F9. Semaine 46 sur l'ARC, -1 dans ARCHIMEDE.</li>
-      <li>Note livraison : « bien passer par Hauteluce ».</li>
-    </ul>
-    <div class="tbl"><table>
-      <thead><tr><th>Pos</th><th>Type</th><th>OF/OB</th><th>Sens</th><th>Fab H × L</th><th>Particularités</th><th>Fait</th></tr></thead>
-      <tbody>
-        <tr><td class="n">1</td><td>PF 2 vtx</td><td>OF</td><td>VP D</td><td class="n">2070 × 1330</td><td>TB 135, seuil alu RPT, crémone poignée INT</td><td><input type="checkbox" id="c1" aria-label="Pos 1 faite"></td></tr>
-        <tr><td class="n">2</td><td>Châssis fixe</td><td>–</td><td>–</td><td class="n">2050 × 1350</td><td>Vitrage dans dormant, TB 135 + PG16 (semblant de seuil alu)</td><td><input type="checkbox" id="c2" aria-label="Pos 2 faite"></td></tr>
-        <tr><td class="n">3</td><td>PF 2 vtx</td><td>OF</td><td>VP D</td><td class="n">2060 × 1315</td><td>TB 135, seuil alu RPT, crémone poignée INT</td><td><input type="checkbox" id="c3" aria-label="Pos 3 faite"></td></tr>
-        <tr><td class="n">4</td><td>F 1 vtl</td><td>OF</td><td>GT</td><td class="n">640 × 690</td><td>PA 003</td><td><input type="checkbox" id="c4" aria-label="Pos 4 faite"></td></tr>
-        <tr><td class="n">5</td><td>F 1 vtl</td><td>OF</td><td>DT</td><td class="n">640 × 690</td><td>PA 003</td><td><input type="checkbox" id="c5" aria-label="Pos 5 faite"></td></tr>
-        <tr><td class="n">6</td><td>F 1 vtl</td><td><b>OB</b></td><td>DT</td><td class="n">640 × 690</td><td>PA 003</td><td><input type="checkbox" id="c6" aria-label="Pos 6 faite"></td></tr>
-        <tr><td class="n">7</td><td>F 1 vtl</td><td><b>OB</b></td><td>GT</td><td class="n">750 × 990</td><td>PA 003</td><td><input type="checkbox" id="c7" aria-label="Pos 7 faite"></td></tr>
-        <tr><td class="n">8</td><td>F 2 vtx</td><td>OF</td><td>VP D</td><td class="n">1530 × 1630</td><td>PA 003, verrou semi-fixe</td><td><input type="checkbox" id="c8" aria-label="Pos 8 faite"></td></tr>
-        <tr><td class="n">9</td><td>F 1 vtl</td><td>OF</td><td>GT</td><td class="n">550 × 600</td><td>PA 003</td><td><input type="checkbox" id="c9" aria-label="Pos 9 faite"></td></tr>
-        <tr><td class="n">10</td><td>F 1 vtl</td><td>OF</td><td>DT</td><td class="n">580 × 630</td><td>PA 003</td><td><input type="checkbox" id="c10" aria-label="Pos 10 faite"></td></tr>
-        <tr><td class="n">11</td><td>F 1 vtl</td><td><b>OB</b></td><td>DT</td><td class="n">590 × 1000</td><td>PA 003, fiches EXACTA 14, allège 3000</td><td><input type="checkbox" id="c11" aria-label="Pos 11 faite"></td></tr>
-        <tr><td class="n">12</td><td>F 1 vtl</td><td><b>OB</b></td><td>GT</td><td class="n">610 × 1170</td><td>PA 003, fiches EXACTA 14, allège 3000</td><td><input type="checkbox" id="c12" aria-label="Pos 12 faite"></td></tr>
-      </tbody>
-    </table></div>
-    <p class="foot">Attention : la hauteur est donnée en premier sur l'ARC (H × L). C'est l'erreur de la 1034.</p>
-  </div>
-</details>
-
-<details>
-  <summary>Méthode : contrôler avant d'éditer</summary>
-  <div class="inner">
-    <ul>
-      <li>Après la saisie, et <b>avant</b> la séquence d'impression, envoyez-moi la photo de l'ARC et les exports ARCHIMEDE (récap, fiches de fab, XML, .imp, vitrages, parcloses, panneaux, annexes).</li>
-      <li>Je renvoie une page comme celle-ci : les erreurs en rouge, les points à vérifier en orange, le reste en vert.</li>
-      <li>Points toujours contrôlés : H × L, OF/OB, sens, VMC, appui ou seuil, TB 135, allège, quincaillerie, vitrage et altitude, jets d'eau, MONO, et cohérence fab = XML = débit.</li>
-    </ul>
-  </div>
-</details>
-
+  <p class="saved" id="saved" aria-live="polite"></p>
 </div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  function h(tag, attrs, ...kids){
+    const el = document.createElement(tag);
+    for (const [k,v] of Object.entries(attrs||{})){
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else if (k === 'checked') el.checked = !!v;
+      else if (k === 'value') el.value = v;
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()){
+      if (kid == null || kid === false) continue;
+      el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  }
+
+  let db = null, orders = [], etats = {}, current = null;
+  const NIV = {erreur:'ERREUR', verifier:'À VÉRIFIER', regle:'RÉGLÉ'};
+
+  function etat(id){ return etats[id] || {issues:{}, checks:{}, signatures:{}}; }
+  function issueDone(o, is){ const e = etat(o.id).issues?.[is.id]; return !!(e && e.choix); }
+  function counts(o){
+    const iss = o.issues || [];
+    return {
+      err: iss.filter(i => i.niveau === 'erreur' && !issueDone(o,i)).length,
+      ver: iss.filter(i => i.niveau === 'verifier' && !issueDone(o,i)).length,
+      ok: o.posOk || 0
+    };
+  }
+  function edited(o){ const s = etat(o.id).signatures || {}; return !!(s.edition && s.edition.trim()); }
+
+  // ---- écriture (une à la fois par document) ----
+  const queues = {};
+  function save(id, patch){
+    const cur = JSON.parse(JSON.stringify(etat(id)));
+    deepMerge(cur, patch);
+    etats[id] = cur;
+    renderList();
+    if (!db) return;
+    const run = (queues[id] || Promise.resolve()).then(() => db.doc('etats/' + id).set(cur))
+      .then(() => { $('#saved').textContent = 'Enregistré.'; })
+      .catch(e => { $('#saved').textContent = e && e.code === 'invalid_argument'
+        ? "Vous n'avez pas le droit de modifier cette page : demandez un accès Contributeur."
+        : "Enregistrement impossible pour le moment. Réessayez dans un instant."; });
+    queues[id] = run;
+  }
+  function deepMerge(t, p){
+    for (const [k,v] of Object.entries(p)){
+      if (v && typeof v === 'object' && !Array.isArray(v)){ t[k] = t[k] && typeof t[k] === 'object' ? t[k] : {}; deepMerge(t[k], v); }
+      else t[k] = v;
+    }
+  }
+
+  // ---- liste ----
+  function renderList(){
+    const box = $('#orders'); box.replaceChildren();
+    $('#count').textContent = orders.length ? orders.length + (orders.length > 1 ? ' commandes' : ' commande') : '';
+    for (const o of orders){
+      const c = counts(o);
+      const chips = [];
+      if (o.type === 'saisie') chips.push(h('span',{class:'chip c-muted'},'Fiche de saisie'));
+      else {
+        if (c.err) chips.push(h('span',{class:'chip c-red'}, c.err + ' erreur' + (c.err>1?'s':'')));
+        if (c.ver) chips.push(h('span',{class:'chip c-amber'}, c.ver + ' à vérifier'));
+        if (!c.err && !c.ver) chips.push(h('span',{class:'chip c-green'},'Tout réglé'));
+      }
+      if (edited(o)) chips.push(h('span',{class:'chip c-green'},'Éditée'));
+      box.append(h('button',{class:'order', role:'listitem', 'aria-current': current === o.id ? 'true' : 'false',
+        onclick:() => { location.hash = 'c-' + o.id; }},
+        h('b',null, o.titreCourt || ('Commande ' + o.num)),
+        h('small',null, [o.client, o.chantier].filter(Boolean).join(' · ')),
+        h('div',{class:'chips'}, chips)));
+    }
+  }
+
+  // ---- feuille ----
+  function renderSheet(){
+    const main = $('#main');
+    const o = orders.find(x => x.id === current);
+    if (!o){
+      main.replaceChildren(h('div',{class:'state'},
+        orders.length ? h('b',null,'Choisissez une commande ci-dessus.') : h('b',null,'Aucune commande contrôlée pour le moment.'),
+        h('p',null,"Pour en ajouter une : envoyez à Claude la photo de l'ARC et les exports ARCHIMEDE (récap, fiches de fab, XML, .imp, vitrages, parcloses, panneaux, annexes). La commande apparaîtra ici.")));
+      return;
+    }
+    const e = etat(o.id);
+    const sheet = h('article',{class:'sheet'});
+    const c = counts(o);
+    sheet.append(h('div',{class:'top'},
+      h('div',null, h('h2',null, o.titre), h('div',{class:'meta'}, o.meta)),
+      o.date ? h('div',{class:'meta'}, 'Contrôlé le ' + o.date) : null));
+    if (o.type !== 'saisie'){
+      sheet.append(h('div',{class:'score'},
+        h('span',{class:'c-red'}, c.err + ' ERREUR' + (c.err>1?'S':'')),
+        h('span',{class:'c-amber'}, c.ver + ' À VÉRIFIER'),
+        h('span',{class:'c-green'}, (o.posOk||0) + ' POSITIONS OK')));
+    }
+
+    if (o.entete && o.entete.length){
+      sheet.append(h('h3',{class:'sec'},'En-tête'));
+      sheet.append(h('div',{class:'entete'}, o.entete.map((t,i) => {
+        const key = 'e' + i;
+        return h('label',{class:'chk'}, h('input',{type:'checkbox', checked: e.checks?.[key],
+          onchange: ev => save(o.id,{checks:{[key]:ev.target.checked}})}), h('span',null,t));
+      })));
+    }
+
+    if (o.issues && o.issues.length){
+      sheet.append(h('h3',{class:'sec'},'À traiter'));
+      for (const is of o.issues){
+        const st = e.issues?.[is.id] || {};
+        const done = !!st.choix;
+        const lvl = done ? 'regle' : is.niveau;
+        const box = h('div',{class:'issue ' + is.niveau + (done ? ' regle' : '')});
+        box.append(h('div',{class:'ititle'}, h('span',{class:'lbl ' + lvl}, NIV[lvl]), is.titre));
+        if (is.texte) box.append(h('p',null,is.texte));
+        if (is.compare) box.append(h('div',{class:'cmp'}, is.compare.map(x =>
+          h('div',{class:x.bad ? 'bad' : null}, h('small',null,x.label), h('strong',null,x.val)))));
+        if (is.action) box.append(h('p',{class:'todo'}, is.action));
+        if (is.table) box.append(table(is.table));
+        if (is.note) box.append(h('p',{class:'foot'}, is.note));
+        const name = 'ch-' + o.id + '-' + is.id;
+        box.append(h('div',{class:'choices'},
+          (is.choix || ['Réglé']).map(lab => h('label',null,
+            h('input',{type:'radio', name, checked: st.choix === lab,
+              onchange: () => { save(o.id,{issues:{[is.id]:{choix:lab}}}); renderSheet(); }}), lab)),
+          done ? h('button',{type:'button', class:'chip c-muted', style:'cursor:pointer;background:none',
+            onclick: () => { save(o.id,{issues:{[is.id]:{choix:''}}}); renderSheet(); }}, 'Rouvrir') : null));
+        box.append(h('input',{class:'note', type:'text', id:'note-' + o.id + '-' + is.id, placeholder:'Décision, commentaire…',
+          value: st.note || '', 'aria-label':'Commentaire : ' + is.titre,
+          onchange: ev => save(o.id,{issues:{[is.id]:{note:ev.target.value}}})}));
+        sheet.append(box);
+      }
+    }
+
+    if (o.ok && o.ok.length){
+      sheet.append(h('h3',{class:'sec'},"Conforme à l'ARC"));
+      sheet.append(h('ul',{class:'ok'}, o.ok.map(t => h('li',null,t))));
+    }
+
+    if (o.positions){
+      sheet.append(h('h3',{class:'sec'}, o.type === 'saisie' ? 'Positions' : 'Détail position par position'));
+      sheet.append(table(o.positions, o));
+      if (o.positions.foot) sheet.append(h('p',{class:'foot'}, o.positions.foot));
+    }
+
+    const sig = o.signatures || ['Saisie corrigée le', 'Vérifiée par', 'Commande éditée le'];
+    const keys = ['saisie','verif','edition'];
+    sheet.append(h('div',{class:'sign'}, sig.map((lab,i) => h('label',null, lab,
+      h('input',{type:'text', id:'sig-' + o.id + '-' + i, value: e.signatures?.[keys[i]] || '',
+        onchange: ev => save(o.id,{signatures:{[keys[i]]:ev.target.value}})})))));
+    main.replaceChildren(sheet);
+  }
+
+  function table(t, o){
+    const checkCols = (o && t.checkCols) || [];
+    const e = o ? etat(o.id) : null;
+    return h('div',{class:'tbl'}, h('table',null,
+      h('thead',null, h('tr',null, t.head.map(x => h('th',null,x)), checkCols.map(x => h('th',null,x)))),
+      h('tbody',null, t.rows.map((r,ri) => {
+        const cells = Array.isArray(r) ? r : r.cells;
+        const cls = Array.isArray(r) ? null : r.statut;
+        return h('tr',{class:cls},
+          cells.map((x,ci) => h('td',{class:(t.mono||[]).includes(ci) ? 'n' : null}, x)),
+          checkCols.map((col,ci) => {
+            const key = 'p' + ri + '-' + ci;
+            return h('td',{class:'ck'}, h('input',{type:'checkbox', 'aria-label': col + ' ligne ' + (ri+1),
+              checked: e.checks?.[key], onchange: ev => save(o.id,{checks:{[key]:ev.target.checked}})}));
+          }));
+      }))));
+  }
+
+  function route(){
+    const m = location.hash.match(/^#c-([A-Za-z0-9-]+)$/);
+    current = m ? m[1] : (orders[0] && orders[0].id) || null;
+    renderList(); renderSheet();
+  }
+  window.addEventListener('hashchange', route);
+
+  (async () => {
+    db = window.claude ? await window.claude.use('db') : null;
+    if (!db){
+      $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Les commandes ne peuvent pas être chargées ici.'),
+        h('p',null,'Ouvrez cette page depuis claude.ai en étant connecté.')));
+      return;
+    }
+    db.collection('commandes').onSnapshot(snap => {
+      orders = snap.docs.map(d => Object.assign({id:d.id}, d.data()))
+        .sort((a,b) => (b.ordre||0) - (a.ordre||0));
+      route();
+    }, () => { $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Connexion aux commandes interrompue.'), h('p',null,'Rechargez la page.'))); });
+    db.collection('etats').onSnapshot(snap => {
+      const active = document.activeElement;
+      const typing = active && active.tagName === 'INPUT' && active.type === 'text';
+      for (const d of snap.docs) etats[d.id] = d.data();
+      renderList();
+      if (!typing) renderSheet();
+    }, () => {});
+  })();
+})();
+</script>
