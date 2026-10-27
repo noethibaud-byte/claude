@@ -100,6 +100,16 @@ td.ck{text-align:center}
 .field input[type=text]{border:1.5px solid var(--cell);border-radius:4px;padding:7px 9px;background:var(--paper)}
 .picked{font-size:.8rem;color:var(--muted)}
 @media (max-width:520px){.sheet{padding:16px 14px 20px}}
+
+/* Copie hors écran qui sert à fabriquer le PDF : toujours en clair, largeur A4 */
+.pdf{--bg:#ffffff;--paper:#ffffff;--fg:#111111;--muted:#444a46;--rule:#111111;--cell:#8a8f8c;--head:#e8e8e8;
+  --red:#b3261e;--red-bg:#fde3e0;--amber:#8a5a00;--amber-line:#c48a00;--green:#2b7247;--done:#9aa19d;
+  position:fixed;left:-12000px;top:0;width:794px;background:#fff;color:#111;font-size:13px}
+.pdf .sheet{box-shadow:none;padding:28px 34px}
+.pdf .ok{columns:auto}
+.pdf .box{display:inline-block;width:11px;height:11px;border:1.2px solid #111;margin-right:5px;vertical-align:-1px;text-align:center;line-height:10px;font-size:10px;font-weight:700}
+.pdf .val{display:inline-block;min-width:140px;border-bottom:1px dotted #8a8f8c;padding:1px 0}
+.printbtn{background:transparent;border:1.5px solid var(--rule);border-radius:5px;padding:6px 12px;font-weight:700;cursor:pointer;color:var(--fg)}
 </style>
 
 <div class="wrap">
@@ -132,7 +142,7 @@ td.ck{text-align:center}
   }
   const S = v => (v == null ? '' : String(v));
 
-  let db = null, sample = null, assets = null;
+  let db = null, sample = null, assets = null, downloads = null;
   let orders = [], etats = {}, current = null;
   let busy = null; // {id, ctl, status, err}
   const NIV = {erreur:'ERREUR', verifier:'À VÉRIFIER', regle:'RÉGLÉ'};
@@ -214,7 +224,9 @@ td.ck{text-align:center}
     const sheet = h('article',{class:'sheet'});
     sheet.append(h('div',{class:'top'},
       h('div',null, h('h2',null, o.titre), h('div',{class:'meta'}, o.meta)),
-      (c && c.date) ? h('div',{class:'meta'}, 'Contrôlé le ' + c.date) : null));
+      h('div',{class:'row', style:'flex-direction:column;align-items:flex-end;gap:6px'},
+        downloads ? h('button',{class:'printbtn', type:'button', 'data-noprint':'', onclick: ev => exportPdf(o, ev.currentTarget)}, 'Imprimer (PDF)') : null,
+        (c && c.date) ? h('div',{class:'meta'}, 'Contrôlé le ' + c.date) : null)));
 
     if (c){
       const k = counts(o);
@@ -560,6 +572,65 @@ Règles : les cotes de l'ARC sont écrites « H … × … » (hauteur d'abord) 
     }
   }
 
+  // ---- impression : PDF A4 de la feuille, coupé entre les blocs ----
+  async function exportPdf(o, btn){
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Préparation du PDF…';
+    let holder = null;
+    try {
+      if (!window.html2canvas) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      if (!window.jspdf) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      const src = document.querySelector('#main .sheet');
+      holder = h('div',{class:'pdf'});
+      const sheet = src.cloneNode(true);
+      // Les champs deviennent du texte imprimé, avec l'état réel de la page (appariés avant tout retrait)
+      const live = src.querySelectorAll('input'); const copy = sheet.querySelectorAll('input');
+      copy.forEach((inp, i) => {
+        const real = live[i];
+        if (inp.type === 'checkbox' || inp.type === 'radio') inp.replaceWith(h('span',{class:'box'}, real && real.checked ? 'X' : ''));
+        else if (inp.type === 'text') inp.replaceWith(h('span',{class:'val'}, real ? real.value : ''));
+        else inp.remove();
+      });
+      sheet.querySelectorAll('.action,[data-noprint],button').forEach(n => n.remove());
+      holder.append(sheet); document.body.append(holder);
+      const canvas = await window.html2canvas(holder, {scale:2, backgroundColor:'#ffffff', logging:false});
+      // Points de coupe possibles : le haut de chaque bloc
+      const base = holder.getBoundingClientRect().top;
+      const cuts = [...holder.querySelectorAll('.issue, tr, h3.sec, li, .sign, .entete label, .score, p')]
+        .map(n => Math.round(n.getBoundingClientRect().top - base)).sort((a,b) => a-b);
+      const W = holder.offsetWidth, H = holder.offsetHeight;
+      const {jsPDF} = window.jspdf;
+      const pdf = new jsPDF({unit:'mm', format:'a4'});
+      const mm = 190 / W, pageH = Math.floor(277 / mm);
+      const k = canvas.width / W;
+      let y = 0, first = true;
+      while (y < H - 2){
+        let end = Math.min(H, y + pageH);
+        if (end < H){
+          const best = cuts.filter(t => t > y + 120 && t <= end).pop();
+          if (best) end = best;
+        }
+        const part = document.createElement('canvas');
+        part.width = canvas.width; part.height = Math.round((end - y) * k);
+        part.getContext('2d').drawImage(canvas, 0, Math.round(y * k), canvas.width, part.height, 0, 0, canvas.width, part.height);
+        if (!first) pdf.addPage();
+        pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', 10, 10, 190, (end - y) * mm);
+        first = false; y = end;
+      }
+      const name = 'Controle ' + (o.num ? 'commande ' + o.num : (o.arc ? 'ARC ' + o.arc : o.id)) + '.pdf';
+      await downloads.save({filename: name.replace(/[\\/:*?"<>|]/g,''), data: pdf.output('blob')});
+      $('#saved').textContent = 'PDF enregistré. Ouvrez-le pour l\'imprimer.';
+    } catch (e){
+      const c = e && e.code;
+      $('#saved').textContent = c === 'declined' ? 'Enregistrement du PDF annulé.'
+        : (e && e.message === 'script') ? "Le PDF n'a pas pu être préparé : vérifiez la connexion internet."
+        : "Le PDF n'a pas pu être créé. Réessayez dans un instant.";
+    } finally {
+      if (holder) holder.remove();
+      btn.disabled = false; btn.textContent = label;
+    }
+  }
+
   function route(){
     if (location.hash === '#nouvelle') current = 'nouvelle';
     else {
@@ -572,7 +643,7 @@ Règles : les cotes de l'ARC sont écrites « H … × … » (hauteur d'abord) 
 
   (async () => {
     if (!window.claude){ $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Ouvrez cette page depuis claude.ai.'))); return; }
-    [db, sample, assets] = await Promise.all(['db','sample','assets'].map(n => window.claude.use(n).catch(() => null)));
+    [db, sample, assets, downloads] = await Promise.all(['db','sample','assets','downloads'].map(n => window.claude.use(n).catch(() => null)));
     if (!db){
       $('#main').replaceChildren(h('div',{class:'state'}, h('b',null,'Les commandes ne peuvent pas être chargées ici.'),
         h('p',null,'Ouvrez cette page depuis claude.ai en étant connecté.')));
