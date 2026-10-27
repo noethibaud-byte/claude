@@ -1,0 +1,197 @@
+<title>Contrôle saisie ARCHIMEDE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : une colonne façon dossier d'atelier, trois sections, tableaux compacts */
+:root{
+  --bg:#f6f7f5; --paper:#ffffff; --fg:#1d2420; --muted:#5d6a63; --line:#d9dfdb;
+  --accent:#2f6b4f; --accent-soft:#e3efe8;
+  --ok:#2f7a4a; --ok-bg:#e4f3e9; --warn:#9a6200; --warn-bg:#fbf0d9; --bad:#b03a2e; --bad-bg:#f9e3e0;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141917; --paper:#1c2320; --fg:#e4ebe7; --muted:#9aa8a0; --line:#2f3934;
+  --accent:#7cc3a0; --accent-soft:#22332b;
+  --ok:#79c995; --ok-bg:#1e3326; --warn:#e8b65a; --warn-bg:#3a2e17; --bad:#ef8a7e; --bad-bg:#3d2320; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --paper:#1c2320; --fg:#e4ebe7; --muted:#9aa8a0; --line:#2f3934;
+  --accent:#7cc3a0; --accent-soft:#22332b;
+  --ok:#79c995; --ok-bg:#1e3326; --warn:#e8b65a; --warn-bg:#3a2e17; --bad:#ef8a7e; --bad-bg:#3d2320; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:1.75rem;font-weight:700}
+h2{font-size:1.3rem;font-weight:600;display:flex;gap:10px;align-items:baseline}
+h2 .tag{font-family:var(--mono);font-size:.8rem;color:var(--accent);font-weight:500;letter-spacing:.04em}
+h3{font-size:1rem;font-weight:600}
+p{margin:0;max-width:70ch}
+.lead{color:var(--muted)}
+section{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mono,td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)} .bad{background:var(--bad-bg);color:var(--bad)}
+.alert{border-left:4px solid var(--bad);background:var(--bad-bg);padding:12px 16px;border-radius:4px}
+.alert strong{color:var(--bad)}
+ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:.9rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:500}
+label.chk{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin-top:3px;flex:none}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:75ch}
+.foot{color:var(--muted);font-size:.82rem}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:8px">
+  <h1>Contrôle saisie ARCHIMEDE</h1>
+  <p class="lead">Fiche de saisie de l'ARC n° 5345 NG, rapport de cohérence de la commande 1034, et méthode de contrôle avant édition.</p>
+</header>
+
+<div class="alert">
+  <strong>L'ARC fourni ne correspond pas à la commande 1034.</strong>
+  L'ARC n° 5345 NG est pour le client <b>BFM</b>, projet Merlin, Col du Joly, avec <b>12 positions</b>. Les documents ARCHIMEDE de la 1034 sont pour le client <b>BMA</b>, réf. DUPONT ROC 3, avec <b>14 positions</b>. La comparaison ARC ↔ saisie n'est donc pas possible sur cet exemple. Le rapport 1034 ci-dessous contrôle seulement la cohérence des documents ARCHIMEDE entre eux. La fiche de saisie est faite à partir de l'ARC 5345.
+</div>
+
+<!-- ============ 2. FICHE DE SAISIE ============ -->
+<section>
+  <h2><span class="tag">FICHE DE SAISIE</span> ARC n° 5345 NG : BFM, Merlin</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>En-tête de commande</h3>
+      <dl class="kv">
+        <dt>Client</dt><dd>BFM</dd>
+        <dt>Projet / chantier</dt><dd>Merlin, Col du Joly</dd>
+        <dt>Gamme</dt><dd>RT68, pin sylvestre</dd>
+        <dt>Dormant</dt><dd class="mono">68 × 80</dd>
+        <dt>Traitement</dt><dd>IFH, finition chantier à prévoir sous 3 mois</dd>
+        <dt>Vitrage</dt><dd>Ug 1,1, argon, WE noir, 4 lowE / 20 / 4</dd>
+        <dt>Altitude</dt><dd><b>2000 m</b> (à reporter sur les vitrages)</dd>
+        <dt>Livraison</dt><dd>Semaine 46, à l'entrepôt</dd>
+        <dt>Poignées</dt><dd>ATLANTA aspect inox F9</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>Informations générales</h3>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label class="chk"><input type="checkbox" id="g1"><span>Pose en <b>applique</b>, <b>cochonnet 30</b></span></label>
+        <label class="chk"><input type="checkbox" id="g2"><span><b>Pas de mortaise VMC</b> (demande client) : aucune VMC sur aucune position</span></label>
+        <label class="chk"><input type="checkbox" id="g3"><span>Traitement IFH saisi (pas IF__0)</span></label>
+        <label class="chk"><input type="checkbox" id="g4"><span>Altitude 2000 m renseignée pour le vitrage</span></label>
+        <label class="chk"><input type="checkbox" id="g5"><span>Couleur poignée / cache-fiche F9</span></label>
+        <label class="chk"><input type="checkbox" id="g6"><span>Semaine de livraison 46 renseignée</span></label>
+        <label class="chk"><input type="checkbox" id="g7"><span>Note livraison : « Col du Joly, bien passer par Hauteluce ! »</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Pos</th><th>Type</th><th>OF / OB</th><th>Sens</th><th>Tableau H × L</th><th>Fab H × L</th><th>Seuil / appui</th><th>Particularités</th><th>Saisi</th><th>Vérifié</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>PF 2 vantaux</td><td>OF</td><td>VP droite</td><td class="num">2020 × 1230</td><td class="num">2070 × 1330</td><td>Seuil alu RPT</td><td>TB 135, verrou semi-fixe, crémone simple poignée INT</td><td><input type="checkbox" id="s1" aria-label="Pos 1 saisie"></td><td><input type="checkbox" id="v1" aria-label="Pos 1 vérifiée"></td></tr>
+        <tr><td class="num">2</td><td>Châssis fixe, vitrage dans dormant</td><td>Fixe</td><td>–</td><td class="num">2000 × 1250</td><td class="num">2050 × 1350</td><td>–</td><td>TB 135 + PG16</td><td><input type="checkbox" id="s2" aria-label="Pos 2 saisie"></td><td><input type="checkbox" id="v2" aria-label="Pos 2 vérifiée"></td></tr>
+        <tr><td class="num">3</td><td>PF 2 vantaux</td><td>OF</td><td>VP droite</td><td class="num">2010 × 1215</td><td class="num">2060 × 1315</td><td>Seuil alu RPT</td><td>TB 135, verrou semi-fixe, crémone simple poignée INT</td><td><input type="checkbox" id="s3" aria-label="Pos 3 saisie"></td><td><input type="checkbox" id="v3" aria-label="Pos 3 vérifiée"></td></tr>
+        <tr><td class="num">4</td><td>Fenêtre 1 vantail</td><td>OF</td><td>GT</td><td class="num">590 × 590</td><td class="num">640 × 690</td><td>PA 003</td><td></td><td><input type="checkbox" id="s4" aria-label="Pos 4 saisie"></td><td><input type="checkbox" id="v4" aria-label="Pos 4 vérifiée"></td></tr>
+        <tr><td class="num">5</td><td>Fenêtre 1 vantail</td><td>OF</td><td>DT</td><td class="num">590 × 590</td><td class="num">640 × 690</td><td>PA 003</td><td></td><td><input type="checkbox" id="s5" aria-label="Pos 5 saisie"></td><td><input type="checkbox" id="v5" aria-label="Pos 5 vérifiée"></td></tr>
+        <tr><td class="num">6</td><td>Fenêtre 1 vantail</td><td><b>OB</b></td><td>DT</td><td class="num">590 × 590</td><td class="num">640 × 690</td><td>PA 003</td><td></td><td><input type="checkbox" id="s6" aria-label="Pos 6 saisie"></td><td><input type="checkbox" id="v6" aria-label="Pos 6 vérifiée"></td></tr>
+        <tr><td class="num">7</td><td>Fenêtre 1 vantail</td><td><b>OB</b></td><td>GT</td><td class="num">700 × 890</td><td class="num">750 × 990</td><td>PA 003</td><td></td><td><input type="checkbox" id="s7" aria-label="Pos 7 saisie"></td><td><input type="checkbox" id="v7" aria-label="Pos 7 vérifiée"></td></tr>
+        <tr><td class="num">8</td><td>Fenêtre 2 vantaux</td><td>OF</td><td>VP droite <span class="pill warn">à confirmer</span></td><td class="num">1480 × 1530</td><td class="num">1530 × 1630</td><td>PA 003</td><td>Verrou semi-fixe. Le libellé dit « vantail principal à définir »</td><td><input type="checkbox" id="s8" aria-label="Pos 8 saisie"></td><td><input type="checkbox" id="v8" aria-label="Pos 8 vérifiée"></td></tr>
+        <tr><td class="num">9</td><td>Fenêtre 1 vantail</td><td>OF</td><td>GT</td><td class="num">500 × 500</td><td class="num">550 × 600</td><td>PA 003</td><td></td><td><input type="checkbox" id="s9" aria-label="Pos 9 saisie"></td><td><input type="checkbox" id="v9" aria-label="Pos 9 vérifiée"></td></tr>
+        <tr><td class="num">10</td><td>Fenêtre 1 vantail</td><td>OF</td><td>DT</td><td class="num">530 × 530</td><td class="num">580 × 630</td><td>PA 003</td><td></td><td><input type="checkbox" id="s10" aria-label="Pos 10 saisie"></td><td><input type="checkbox" id="v10" aria-label="Pos 10 vérifiée"></td></tr>
+        <tr><td class="num">11</td><td>Fenêtre 1 vantail</td><td><b>OB</b></td><td>DT</td><td class="num">540 × 900</td><td class="num">590 × 1000</td><td>PA 003</td><td>Fiches EXACTA 14, <b>allège 3000</b></td><td><input type="checkbox" id="s11" aria-label="Pos 11 saisie"></td><td><input type="checkbox" id="v11" aria-label="Pos 11 vérifiée"></td></tr>
+        <tr><td class="num">12</td><td>Fenêtre 1 vantail</td><td><b>OB</b></td><td>GT</td><td class="num">560 × 1070</td><td class="num">610 × 1170</td><td>PA 003</td><td>Fiches EXACTA 14, <b>allège 3000</b></td><td><input type="checkbox" id="s12" aria-label="Pos 12 saisie"></td><td><input type="checkbox" id="v12" aria-label="Pos 12 vérifiée"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="foot">Quantité 1 par position, 12 menuiseries. Contrôle des cotes : sur les 12 lignes, la cote de fabrication = tableau <b>+50 en hauteur et +100 en largeur</b>, sans exception. L'ARC est donc cohérent pour une pose en applique.</p>
+
+  <div class="card">
+    <h3>À clarifier avant de saisir</h3>
+    <ul class="plain">
+      <li><span class="pill warn">Pos 8</span> Le libellé dit « vantail principal à définir », mais la colonne sens indique « VP droite ». Faire confirmer le côté du vantail principal.</li>
+      <li><span class="pill warn">Pos 2</span> « PG16 » : vérifier à quel profil ou accessoire correspond cette référence dans ARCHIMEDE.</li>
+      <li><span class="pill warn">VMC</span> « Pas de mortaise / VMC demandée par le client » : s'assurer qu'ARCHIMEDE ne met pas de VMC par défaut. Sur la 1034, une VMC est ajoutée sur 7 positions.</li>
+      <li><span class="pill warn">Tampon ARC</span> Les cases « Commande saisie » et « Commande enregistrée » sont encore vides et à parapher.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 4. ANALYSE 1034 ============ -->
+<section>
+  <h2><span class="tag">RAPPORT</span> Commande 1034 : BMA, DUPONT ROC 3</h2>
+  <p class="lead">14 positions, 15 menuiseries (la position 8 est en quantité 2). Lancement 26_S40 WINDORFLEX, pin DKD, IF__0. Documents contrôlés : récap, 28 fiches de fab, XML Windorflex, programme de débit .imp, liste de débit, vitrages, parcloses, panneaux, pièces annexes.</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Contrôle</th><th>Résultat</th><th>Détail</th></tr></thead>
+      <tbody>
+        <tr><td>Fiches de fab ↔ XML d'usinage Windorflex</td><td><span class="pill ok">Conforme</span></td><td>138 pièces de part et d'autre, longueur, largeur et épaisseur identiques pour chaque pièce.</td></tr>
+        <tr><td>Fiches de fab ↔ programme de débit (.imp)</td><td><span class="pill ok">Conforme</span></td><td>138 pièces. La surcote est constante : +10 mm en longueur, +4 mm en largeur (75→79, 85→89, 90→94, 135→139, 79→83).</td></tr>
+        <tr><td>Liste de débit PDF ↔ programme .imp</td><td><span class="pill ok">Conforme</span></td><td>Même liste à la pièce près.</td></tr>
+        <tr><td>Traverses basses 135</td><td><span class="pill ok">Conforme</span></td><td>Seulement sur les PF 13 et 14 (2 vantaux chacune), avec traverse intermédiaire 90 et panneau.</td></tr>
+        <tr><td>Seuils</td><td><span class="pill ok">Conforme</span></td><td>Seuil bois (dormant TB 108) sur les positions 1 à 12. Seuil ALU dual 42-68 sur les positions 13 et 14, sans traverse basse de dormant.</td></tr>
+        <tr><td>Vitrages</td><td><span class="pill ok">Conforme</span></td><td>19 vitrages, identiques aux fiches de fab (dimensions et quantités).</td></tr>
+        <tr><td>Parcloses</td><td><span class="pill ok">Conforme</span></td><td>Une ligne par position. Parcloses 20×14 pour les panneaux des positions 13 et 14.</td></tr>
+        <tr><td>Jets d'eau et battues</td><td><span class="pill ok">Quantités OK</span></td><td>Le total par dimension est juste. Les lignes identiques sont regroupées : la colonne « Réf. » ne montre qu'une position (ex. « 754 × 2, réf. 4 » couvre deux fenêtres). Attention à l'étiquetage en atelier.</td></tr>
+        <tr><td>Panneaux</td><td><span class="pill warn">À surveiller</span></td><td>Il n'y a qu'une ligne « POS 1034_14 », en quantité 4. Elle couvre en fait les 2 panneaux de la position 13 et les 2 de la position 14. La mention « Avec platebande » est manuscrite et n'apparaît pas dans les fiches de fab.</td></tr>
+        <tr><td>Fiche seuil</td><td><span class="pill warn">Manquante</span></td><td>Le fichier « Seuil.pdf » est un scan de la liste des panneaux. Aucune fiche seuil alu n'a été fournie pour les positions 13 et 14.</td></tr>
+        <tr><td>Semaine de livraison</td><td><span class="pill bad">Non renseignée</span></td><td>Toutes les fiches de fab affichent « Semaine de livraison : -1 ».</td></tr>
+        <tr><td>Altitude vitrage</td><td><span class="pill warn">Vide</span></td><td>Le champ « Alt. » est vide sur tous les vitrages. Pas gênant si le chantier est en plaine, à vérifier sinon.</td></tr>
+        <tr><td>VMC</td><td><span class="pill warn">À vérifier sur l'ARC</span></td><td>VMC sur les positions 1, 2, 3, 5, 10, 11 et 12. Pas de VMC sur 4 (SdB), 6, 7, 8 (escalier) ni 9 (SàM). La position 9 (SàM) est sans VMC alors que les fenêtres 10 à 12, de même taille, en ont une.</td></tr>
+        <tr><td>Récap : total fenêtres</td><td><span class="pill warn">À vérifier</span></td><td>Le récap indique 16 fenêtres. On en compte 15 (13 positions × 1, plus la position 8 × 2).</td></tr>
+        <tr><td>Chantier sur la liste panneaux</td><td><span class="pill warn">Vide</span></td><td>Le champ « Chantier » est vide sur cette liste, alors que les autres documents indiquent DUPONT ROC 3.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 1. METHODE ============ -->
+<section>
+  <h2><span class="tag">MÉTHODE</span> Contrôle avant édition</h2>
+  <p>Ce contrôle remplace la relecture des fiches de fab imprimées. Il se fait après la saisie et <b>avant</b> la séquence d'impression qui lance la commande.</p>
+  <ol class="steps">
+    <li><b>Scanner ou photographier l'ARC</b>, y compris les annotations manuscrites.</li>
+    <li><b>Exporter depuis ARCHIMEDE</b> la même commande : récap, fiches de fab, XML Windorflex (ou programme Biesse), fichier de débit .imp, vitrages, parcloses, panneaux, pièces annexes, seuils, accessoires de livraison.</li>
+    <li><b>Me transmettre le tout</b>, avec le même numéro de commande sur l'ARC et sur les exports.</li>
+    <li>Je renvoie un <b>rapport d'écarts</b> comme celui ci-dessus. Vous corrigez dans ARCHIMEDE puis vous éditez.</li>
+  </ol>
+  <div class="grid2">
+    <div class="card">
+      <h3>ARC ↔ saisie</h3>
+      <ul class="plain">
+        <li>Nombre de positions et quantités</li>
+        <li>Cotes de fab (règle tableau + recouvrement selon la pose)</li>
+        <li>Type de pose et cochonnet</li>
+        <li>OF / OB, sens d'ouverture, vantail principal</li>
+        <li>Seuil alu RPT ou appui bois, pièces d'appui</li>
+        <li>Traverses basses 135, hauteur d'allège</li>
+        <li>Quincaillerie spécifiée (fiches, crémone, poignées, couleur)</li>
+        <li>Vitrage, Ug, gaz, intercalaire, altitude</li>
+        <li>VMC, finition, semaine de livraison, notes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Cohérence interne ARCHIMEDE</h3>
+      <ul class="plain">
+        <li>Fiches de fab ↔ XML d'usinage, pièce par pièce</li>
+        <li>Fiches de fab ↔ programme et liste de débit (surcotes)</li>
+        <li>Nombre de vitrages et de panneaux ↔ fiches de fab</li>
+        <li>Parcloses, jets d'eau, battues par position</li>
+        <li>Présence de chaque feuille attendue (seuil, accessoires…)</li>
+        <li>Champs vides : semaine, altitude, chantier</li>
+      </ul>
+    </div>
+  </div>
+  <p class="foot">Je ne peux pas saisir ni modifier dans ARCHIMEDE. Le contrôle se fait à partir des fichiers transmis, et la décision finale reste la vôtre.</p>
+</section>
+</div>
