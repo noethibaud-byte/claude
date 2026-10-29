@@ -125,12 +125,18 @@ td.ck{text-align:center}
 td.part{min-width:160px}
 .pdf .box{display:inline-block;width:11px;height:11px;border:1.2px solid #111;margin-right:5px;vertical-align:-1px;text-align:center;line-height:10px;font-size:10px;font-weight:700}
 .pdf .val{display:inline-block;min-width:140px;border-bottom:1px dotted #8a8f8c;padding:1px 0}
+.arch{background:var(--paper);border:1px solid var(--cell);border-radius:6px}
+.arch summary{cursor:pointer;padding:10px 14px;font-weight:700}
+.arch .orders{padding:0 12px 12px}
+.order.archived{opacity:.85}
+.archbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;background:var(--green-bg);color:var(--green);border:1px solid var(--green);border-radius:6px;padding:8px 12px;font-weight:600}
 .printbtn{background:transparent;border:1.5px solid var(--rule);border-radius:5px;padding:6px 12px;font-weight:700;cursor:pointer;color:var(--fg)}
 </style>
 
 <div class="wrap">
   <div class="list-head"><h1>Contrôle saisie ARCHIMEDE</h1><span id="count"></span></div>
   <div class="orders" id="orders" role="list"></div>
+  <details class="arch" id="archives" hidden><summary id="archSum"></summary><div class="orders" id="archList" role="list"></div></details>
   <div id="main">
     <div class="state"><b>Chargement des commandes…</b></div>
   </div>
@@ -201,28 +207,34 @@ td.part{min-width:160px}
   }
 
   // ---- liste ----
+  function orderCard(o){
+    const c = counts(o);
+    const chips = [];
+    if (!ctrl(o)) chips.push(h('span',{class:'chip c-muted'}, 'Fiche de fab à joindre'));
+    else {
+      if (c.err) chips.push(h('span',{class:'chip c-red'}, c.err + ' erreur' + (c.err>1?'s':'')));
+      if (c.ver) chips.push(h('span',{class:'chip c-amber'}, c.ver + ' à vérifier'));
+      if (!c.err && !c.ver) chips.push(h('span',{class:'chip c-green'},'Tout réglé'));
+    }
+    if (edited(o)) chips.push(h('span',{class:'chip c-green'},'Éditée ' + S(etat(o.id).signatures.edition).trim()));
+    if (busy && busy.id === o.id) chips.push(h('span',{class:'chip c-muted'},'Vérification…'));
+    return h('button',{class:'order' + (edited(o) ? ' archived' : ''), role:'listitem', 'aria-current': current === o.id ? 'true' : 'false',
+      onclick:() => { location.hash = 'c-' + o.id; }},
+      h('b',null, o.titreCourt || ('Commande ' + o.num)),
+      h('small',null, [o.client, o.chantier].filter(Boolean).join(' · ')),
+      h('div',{class:'chips'}, chips));
+  }
   function renderList(){
     const box = $('#orders'); box.replaceChildren();
-    $('#count').textContent = orders.length ? orders.length + (orders.length > 1 ? ' commandes' : ' commande') : '';
-    for (const o of orders){
-      const c = counts(o);
-      const chips = [];
-      if (!ctrl(o)) chips.push(h('span',{class:'chip c-muted'}, 'Fiche de fab à joindre'));
-      else {
-        if (c.err) chips.push(h('span',{class:'chip c-red'}, c.err + ' erreur' + (c.err>1?'s':'')));
-        if (c.ver) chips.push(h('span',{class:'chip c-amber'}, c.ver + ' à vérifier'));
-        if (!c.err && !c.ver) chips.push(h('span',{class:'chip c-green'},'Tout réglé'));
-      }
-      if (edited(o)) chips.push(h('span',{class:'chip c-green'},'Éditée'));
-      if (busy && busy.id === o.id) chips.push(h('span',{class:'chip c-muted'},'Vérification…'));
-      box.append(h('button',{class:'order', role:'listitem', 'aria-current': current === o.id ? 'true' : 'false',
-        onclick:() => { location.hash = 'c-' + o.id; }},
-        h('b',null, o.titreCourt || ('Commande ' + o.num)),
-        h('small',null, [o.client, o.chantier].filter(Boolean).join(' · ')),
-        h('div',{class:'chips'}, chips)));
-    }
+    const live = orders.filter(o => !edited(o)), done = orders.filter(edited);
+    $('#count').textContent = orders.length ? live.length + (live.length > 1 ? ' commandes en cours' : ' commande en cours') : '';
+    for (const o of live) box.append(orderCard(o));
     box.append(h('button',{class:'order new', role:'listitem', 'aria-current': current === 'nouvelle' ? 'true' : 'false',
       onclick:() => { location.hash = 'nouvelle'; }}, '+ Nouvelle commande'));
+    const arch = $('#archives'), list = $('#archList');
+    list.replaceChildren(...done.map(orderCard));
+    arch.hidden = !done.length;
+    $('#archSum').textContent = 'Archives : ' + done.length + (done.length > 1 ? ' commandes éditées' : ' commande éditée');
   }
 
   // ---- feuille ----
@@ -244,6 +256,9 @@ td.part{min-width:160px}
       h('div',{class:'row', style:'flex-direction:column;align-items:flex-end;gap:6px'},
         downloads ? h('button',{class:'printbtn', type:'button', 'data-noprint':'', onclick: ev => exportPdf(o, ev.currentTarget)}, 'Imprimer (PDF)') : null,
         (c && c.date) ? h('div',{class:'meta'}, 'Contrôlé le ' + c.date) : null)));
+    if (edited(o)) sheet.append(h('div',{class:'archbar','data-noprint':''},
+      h('span',null,'Commande éditée le ' + S(e.signatures && e.signatures.edition).trim() + ' : rangée dans les archives.'),
+      h('button',{class:'btn ghost', type:'button', onclick:() => { save(o.id,{signatures:{edition:''}}); renderSheet(); }}, 'Remettre en cours')));
 
     if (c){
       const k = counts(o);
@@ -752,9 +767,11 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
     if (location.hash === '#nouvelle') current = 'nouvelle';
     else {
       const m = location.hash.match(/^#c-([A-Za-z0-9-]+)$/);
-      current = m ? m[1] : (orders[0] && orders[0].id) || null;
+      current = m ? m[1] : ((orders.find(x => !edited(x)) || orders[0] || {}).id) || null;
     }
     renderList(); renderSheet();
+    const cur = orders.find(x => x.id === current);
+    if (cur && edited(cur)) $('#archives').open = true;
   }
   window.addEventListener('hashchange', route);
 
