@@ -104,6 +104,9 @@ td.ck{text-align:center}
 .field{display:flex;flex-direction:column;gap:3px;font-size:.85rem}
 .field input[type=text]{border:1.5px solid var(--cell);border-radius:4px;padding:7px 9px;background:var(--paper)}
 .picked{font-size:.8rem;color:var(--muted)}
+.picked ol.pages{margin:6px 0 0;padding-left:20px}
+.picked ol.pages li{margin:2px 0}
+.linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit}
 .del{margin-top:22px;padding-top:12px;border-top:1px dashed var(--cell);display:flex;flex-direction:column;gap:8px}
 .del.confirm{border:2px solid var(--red);border-radius:6px;padding:12px 14px;background:var(--red-bg)}
 .btn.danger{color:var(--red);border-color:var(--red)}
@@ -310,6 +313,7 @@ td.part{min-width:160px}
         sheet.append(table(o.positions, o));
         if (o.positions.foot) sheet.append(h('p',{class:'foot'}, o.positions.foot));
       }
+      sheet.append(arcBox(o));
     }
 
     const sig = o.signatures || ['Saisie corrigée le', 'Vérifiée par', 'Commande éditée le'];
@@ -601,7 +605,8 @@ Un point peut porter un champ optionnel \"table\":{\"head\":[…],\"rows\":[[…
   }
 
   // ---- nouvelle commande ----
-  const ARC_PROMPT = n => `Les ${n} images jointes sont un ARC (accusé de réception de commande) de menuiseries bois de l'entreprise Menuiserie Savoyarde, parfois annoté à la main. Recopie son contenu pour préparer la saisie dans le logiciel ARCHIMEDE.
+  const ARC_INTRO = "un ARC (accusé de réception de commande) de menuiseries bois de l'entreprise Menuiserie Savoyarde, parfois annoté à la main";
+  const ARC_PROMPT = intro => `${intro} Recopie son contenu pour préparer la saisie dans le logiciel ARCHIMEDE.
 Réponds uniquement avec un objet JSON de cette forme :
 {"arc":"5345 NG","client":"BFM","projet":"Merlin","chantier":"Col du Joly","gamme":"RT68 PIN SYLVESTRE","informations":"Pose en applique. Rainures R003 pour habillage BA13 : 3 ou 4 côtés. Annotation manuscrite : J4, Pe ext, Dormant monobloc",
 "entete":["Type de pose : applique, cochonnet 30","Altitude : 2000 m","Section des dormants : 68 × 80","Traitement et finition : IFH, finition chantier sous 3 mois","Jeu : 12","Quincaillerie : F9, poignées ATLANTA aspect inox","Parcloses : intérieures"],
@@ -612,21 +617,82 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
   function newOrderForm(){
     const running = busy && busy.id === 'nouvelle' && !busy.done;
     const num = h('input',{type:'text', id:'new-num', placeholder:'ex. 1035', inputmode:'numeric'});
-    const picked = h('p',{class:'picked'}, newFiles.length ? newFiles.length + ' fichier(s) choisi(s) : ' + newFiles.map(f => f.name).join(', ') : 'Aucun fichier choisi.');
-    const input = h('input',{type:'file', id:'new-arc', accept:'application/pdf,image/*', multiple:true, hidden:true,
-      onchange: ev => { newFiles = [...ev.target.files]; picked.textContent = newFiles.length + ' fichier(s) choisi(s) : ' + newFiles.map(f => f.name).join(', '); go.disabled = !newFiles.length || running; }});
+    const picked = h('div',{class:'picked'});
     const go = h('button',{class:'btn', type:'button', disabled: !newFiles.length || running || !sample || !db,
       onclick:() => createOrder(num.value.trim())}, 'Créer la commande');
+    const pick = h('button',{class:'btn ghost', type:'button', onclick:() => input.click()}, "Choisir l'ARC");
+    const showPicked = () => {
+      picked.replaceChildren(!newFiles.length ? 'Aucun fichier choisi.' :
+        h('ol',{class:'pages'}, newFiles.map((f,i) => h('li',null, f.name, ' ',
+          h('button',{class:'linkbtn', type:'button', 'aria-label':'Retirer ' + f.name, onclick:() => { newFiles.splice(i,1); showPicked(); }}, 'retirer')))));
+      pick.textContent = newFiles.length ? 'Ajouter une page' : "Choisir l'ARC";
+      go.disabled = !newFiles.length || running || !sample || !db;
+    };
+    const input = h('input',{type:'file', id:'new-arc', accept:'application/pdf,image/*', multiple:true, hidden:true,
+      onchange: ev => { newFiles = [...newFiles, ...ev.target.files]; ev.target.value = ''; showPicked(); }});
+    showPicked();
     return h('article',{class:'sheet'},
       h('div',{class:'top'}, h('div',null, h('h2',null,'Nouvelle commande'), h('div',{class:'meta'},"Claude lit l'ARC et prépare la fiche de saisie. Vous joindrez ensuite la fiche de fab pour la vérification."))),
       h('div',{class:'action'},
         h('label',{class:'field'}, 'N° de commande ARCHIMEDE (facultatif)', num),
-        h('div',{class:'field'}, "ARC : photo(s) ou PDF", input,
-          h('div',{class:'row'}, h('button',{class:'btn ghost', type:'button', onclick:() => input.click()}, "Choisir l'ARC"), picked)),
+        h('div',{class:'field'}, "ARC : toutes les pages (un PDF, ou une photo par page)", input,
+          h('div',{class:'row'}, pick), picked,
+          h('p',{class:'foot'}, "ARC sur plusieurs pages : choisissez le PDF complet, ou les photos une par une avec « Ajouter une page ». Claude lit chaque page.")),
         h('div',{class:'row'}, go,
           running ? h('button',{class:'btn ghost', type:'button', onclick:() => busy.ctl && busy.ctl.abort()}, 'Arrêter') : null),
         h('p',{class:'status' + (busy && busy.id === 'nouvelle' && busy.err ? ' err' : ''), id:'st-nouvelle', 'aria-live':'polite'},
           busy && busy.id === 'nouvelle' ? busy.status : (!sample ? "La lecture par Claude n'est pas disponible ici. Envoyez l'ARC à Claude dans la conversation." : ''))));
+  }
+
+  // Lecture page par page : chaque page de l'ARC a sa propre lecture, la page 1 sert de repère pour les colonnes
+  const MAX_ARC_PAGES = 15;
+  async function readArcPages(imgs, per, say, signal, known){
+    const n = imgs.length, parts = [];
+    if (n > MAX_ARC_PAGES) throw {code:'too_many_pages'};
+    for (let i = 0; i < n; i++){
+      say(n > 1 ? "Claude lit l'ARC : page " + (i + 1) + ' sur ' + n + '…' : "Claude lit l'ARC…");
+      let intro, images = [imgs[i]];
+      if (known){
+        intro = `L'image jointe est une page supplémentaire (${i + 1} sur ${n} ajoutées) d'${ARC_INTRO}, dont les autres pages ont déjà été lues. Déjà relevé : ${known}. Dans "positions", recopie TOUTES les lignes de positions de cette page, jusqu'à la dernière. Si les colonnes n'ont pas d'en-tête sur cette page, elles sont dans le même ordre que sur la première page.`;
+      } else if (i > 0 && per >= 2){
+        images = [imgs[0], imgs[i]];
+        intro = `Les 2 images jointes viennent d'${ARC_INTRO}. La première est la page 1 : elle sert seulement à connaître l'en-tête de la commande, la case INFORMATIONS et l'ordre des colonnes. La seconde est la page ${i + 1} sur ${n}. Dans "positions", recopie TOUTES les lignes de positions de la page ${i + 1} (aucune de la page 1), jusqu'à la dernière ligne de la page.`;
+      } else {
+        intro = n > 1 ? `L'image jointe est la page ${i + 1} sur ${n} d'${ARC_INTRO}. Dans "positions", recopie TOUTES les lignes de positions de cette page, jusqu'à la dernière.` : `L'image jointe est ${ARC_INTRO}.`;
+      }
+      parts.push(await sample.json(ARC_PROMPT(intro), {images, signal, cache:false}) || {});
+    }
+    return mergeArc(parts);
+  }
+  function mergeArc(parts){
+    const first = k => { for (const p of parts) if (S(p[k]).trim()) return S(p[k]).trim(); return ''; };
+    const infos = [...new Set(parts.map(p => S(p.informations).trim()).filter(Boolean))].join(' · ');
+    const base = (parts.find(p => Array.isArray(p.entete) && p.entete.length) || {}).entete || [];
+    const entete = base.map((t,i) => {
+      if (!/non précisé/i.test(S(t))) return t;
+      const better = parts.map(p => Array.isArray(p.entete) ? p.entete[i] : '').find(x => x && !/non précisé/i.test(S(x)));
+      return better || t;
+    });
+    const seen = new Set(), positions = [];
+    for (const p of parts) for (const x of (Array.isArray(p.positions) ? p.positions : [])){
+      const key = JSON.stringify([x.pos, x.ref, x.tableauH, x.tableauL, x.fabH, x.fabL].map(v => S(v).trim()));
+      if (seen.has(key)) continue;
+      seen.add(key); positions.push(x);
+    }
+    return {arc:first('arc'), client:first('client'), projet:first('projet'), chantier:first('chantier'), gamme:first('gamme'), informations:infos, entete, positions};
+  }
+  function arcRows(positions){
+    const dim = (a, b) => (a && b) ? S(a) + ' × ' + S(b) : '';
+    return {
+      rows: positions.map(p => [p.pos, p.ref, p.type, p.ofob, p.sens, p.vmc,
+        dim(p.tableauH, p.tableauL), dim(p.fabH, p.fabL) + (p.fabH && p.fabSource === 'manuscrit' ? ' (manuscrit)' : ''), p.qte, p.particularites].map(S)),
+      details: positions.map(p => S(p.details || p.particularites))
+    };
+  }
+  function arcErr(e){
+    if (e && e.code === 'too_many_pages') return "L'ARC a plus de " + MAX_ARC_PAGES + ' pages : gardez seulement les pages utiles.';
+    if (e && e.message === 'script') return "Le lecteur de PDF n'a pas pu se charger. Prenez plutôt les pages en photo.";
+    return sampleMsg(e);
   }
 
   async function createOrder(num){
@@ -637,15 +703,10 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
     try {
       const per = await imageBudget();
       const imgs = await filesToImages(newFiles, say);
-      if (imgs.length > per) throw {code:'image_rejected'};
-      say("Claude lit l'ARC…");
-      const r = await sample.json(ARC_PROMPT(imgs.length), {images: imgs, signal: ctl.signal, cache:false});
+      const r = await readArcPages(imgs, per, say, ctl.signal);
       say('Enregistrement…');
       const fichiers = await keepFiles(newFiles);
-      const dim = (a, b) => (a && b) ? S(a) + ' × ' + S(b) : '';
-      const rows = (Array.isArray(r && r.positions) ? r.positions : []).map(p => [p.pos, p.ref, p.type, p.ofob, p.sens, p.vmc,
-        dim(p.tableauH, p.tableauL), dim(p.fabH, p.fabL) + (p.fabH && p.fabSource === 'manuscrit' ? ' (manuscrit)' : ''), p.qte, p.particularites].map(S));
-      const arcDetails = (Array.isArray(r && r.positions) ? r.positions : []).map(p => S(p.details || p.particularites));
+      const {rows, details: arcDetails} = arcRows(r.positions);
       const arc = S(r && r.arc);
       let id = (num || arc.split(' ')[0] || ('c' + Date.now().toString(36))).replace(/[^A-Za-z0-9-]/g,'') || ('c' + Date.now().toString(36));
       while (orders.some(x => x.id === id)) id += '-2';
@@ -655,7 +716,7 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
         titre: num ? 'Commande ' + num + ' · ARC ' + arc : 'Fiche de saisie : ARC ' + arc,
         meta: ['ARC ' + arc, 'Client ' + S(r.client), [r.projet, r.chantier].filter(Boolean).join(', '), S(r.gamme), rows.length + ' positions'].filter(x => x && !/^(ARC|Client) $/.test(x)).join(' · '),
         arc, client: S(r.client), chantier: [r.projet, r.chantier].filter(Boolean).join(', '), gamme: S(r.gamme), arcInfos: S(r.informations),
-        entete: (Array.isArray(r.entete) ? r.entete : []).map(S).filter(Boolean),
+        entete: r.entete.map(S).filter(Boolean), arcPages: imgs.length,
         positions: {head:['Pos','Réf.','Type','OF/OB','Sens','VMC','Tableau H × L','Fab H × L','Qté','Particularités'], mono:[0,6,7], checkCols:['Saisi','Vérifié'],
           foot:"Sur l'ARC, la hauteur est donnée en premier (H × L).", rows},
         arcFichiers: fichiers, arcDetails,
@@ -665,9 +726,64 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
       busy = null; newFiles = [];
       location.hash = 'c-' + id;
     } catch (e){
-      busy = {id:'nouvelle', status: e && e.code === 'image_rejected' ? "L'ARC a trop de pages : gardez seulement les pages utiles." : sampleMsg(e), err:true, done:true};
+      busy = {id:'nouvelle', status: arcErr(e), err:true, done:true};
       renderSheet();
     }
+  }
+
+  // ---- pages d'ARC oubliées : ajout à une commande existante ----
+  function arcBox(o){
+    const bid = 'arc-' + o.id;
+    const running = busy && busy.id === bid && !busy.done;
+    const input = h('input',{type:'file', accept:'application/pdf,image/*', multiple:true, hidden:true,
+      onchange: ev => { const f = [...ev.target.files]; ev.target.value = ''; if (f.length) addArcPages(o, f); }});
+    const files = o.arcFichiers || [];
+    return h('div',{class:'action', 'data-noprint':''},
+      h('h3',null, "Pages de l'ARC"),
+      files.length ? h('p',{class:'foot'}, 'ARC lu : ', files.map((f,i) => [i ? ', ' : '', h('a',{href:'/_blob/' + f.id, target:'_blank', rel:'noopener'}, f.nom)]),
+        o.arcPages ? ' (' + o.arcPages + ' page' + (o.arcPages > 1 ? 's' : '') + ').' : '.') : null,
+      h('p',{class:'foot'}, "Il manque des positions ? Joignez les pages manquantes : Claude les lit et ajoute leurs lignes au tableau."),
+      input,
+      h('div',{class:'row'},
+        h('button',{class:'btn ghost', type:'button', disabled: running || !sample || !db, onclick:() => input.click()}, "Ajouter des pages d'ARC"),
+        running ? h('button',{class:'btn ghost', type:'button', onclick:() => busy.ctl && busy.ctl.abort()}, 'Arrêter') : null),
+      h('p',{class:'status' + (busy && busy.id === bid && busy.err ? ' err' : ''), id:'st-' + bid, 'aria-live':'polite'},
+        busy && busy.id === bid ? busy.status : ''));
+  }
+  async function addArcPages(o, files){
+    const bid = 'arc-' + o.id;
+    const ctl = new AbortController();
+    busy = {id:bid, ctl, status:'Préparation…', err:false};
+    const say = t => { busy.status = t; const el = document.getElementById('st-' + bid); if (el){ el.textContent = t; el.className = 'status'; } };
+    renderSheet();
+    try {
+      const per = await imageBudget();
+      const imgs = await filesToImages(files, say);
+      const old = (o.positions && o.positions.rows) || [];
+      const known = (o.entete || []).join(' ; ') + ' ; ' + old.length + ' positions déjà relevées, la dernière étant « ' + S(old.length ? old[old.length - 1][0] : '') + ' »';
+      const r = await readArcPages(imgs, per, say, ctl.signal, known);
+      const {rows, details} = arcRows(r.positions);
+      const have = new Set(old.map(x => JSON.stringify([x[0], x[1], x[6], x[7]])));
+      const keep = rows.map((x,i) => i).filter(i => !have.has(JSON.stringify([rows[i][0], rows[i][1], rows[i][6], rows[i][7]])));
+      say('Enregistrement…');
+      const kept = await keepFiles(files);
+      const docBody = JSON.parse(JSON.stringify(Object.assign({}, o)));
+      delete docBody.id;
+      const pos = docBody.positions || {head:['Pos','Réf.','Type','OF/OB','Sens','VMC','Tableau H × L','Fab H × L','Qté','Particularités'], mono:[0,6,7], checkCols:['Saisi','Vérifié'], rows:[]};
+      pos.rows = [...(pos.rows || []), ...keep.map(i => rows[i])];
+      docBody.positions = pos;
+      docBody.arcDetails = [...(docBody.arcDetails || []), ...keep.map(i => details[i])];
+      docBody.arcInfos = [...new Set([S(docBody.arcInfos).trim(), r.informations].filter(Boolean))].join(' · ');
+      docBody.entete = (docBody.entete || []).map((t,i) => /non précisé/i.test(S(t)) && r.entete[i] && !/non précisé/i.test(S(r.entete[i])) ? S(r.entete[i]) : t);
+      docBody.arcFichiers = [...(docBody.arcFichiers || []), ...kept];
+      docBody.arcPages = (docBody.arcPages || (docBody.arcFichiers.length - kept.length) || 0) + imgs.length;
+      if (docBody.meta) docBody.meta = /\d+ positions?/.test(docBody.meta) ? docBody.meta.replace(/\d+ positions?/, pos.rows.length + ' positions') : docBody.meta + ' · ' + pos.rows.length + ' positions';
+      await db.doc('commandes/' + o.id).set(docBody);
+      busy = {id:bid, status: keep.length ? keep.length + ' position' + (keep.length > 1 ? 's ajoutées' : ' ajoutée') + ' au tableau.' + (o.verif ? ' Relancez la vérification avec la fiche de fab.' : '') : 'Aucune nouvelle position sur ces pages.', err:false, done:true};
+    } catch (e){
+      busy = {id:bid, status: arcErr(e), err:true, done:true};
+    }
+    renderList(); renderSheet();
   }
 
   // ---- suppression d'une commande (confirmation dans la page) ----
