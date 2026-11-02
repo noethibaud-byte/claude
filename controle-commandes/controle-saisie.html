@@ -424,15 +424,11 @@ td.part{min-width:160px}
     }
     return out;
   }
+  // Les ARC et fiches de fab portent le nom du client : on ne les conserve pas, on garde seulement le résultat de la lecture
   async function keepFiles(files){
-    if (!assets) return [];
-    const kept = [];
-    for (const f of files){
-      try { const r = await assets.upload(f, f.type ? undefined : {type:'application/pdf'}); kept.push({id:r.id, nom:f.name}); }
-      catch (_) { /* le fichier n'est pas conservé, la vérification continue */ }
-    }
-    return kept;
+    return [];
   }
+
   function sampleMsg(e){
     const c = e && e.code;
     if (c === 'cancelled') return 'Arrêté.';
@@ -620,8 +616,6 @@ Un point peut porter un champ optionnel \"table\":{\"head\":[…],\"rows\":[[…
         running ? h('button',{class:'btn ghost', type:'button', onclick:() => busy.ctl && busy.ctl.abort()}, 'Arrêter') : null),
       h('p',{class:'status' + (busy && busy.id === o.id && busy.err ? ' err' : ''), id:'st-' + o.id, 'aria-live':'polite'},
         busy && busy.id === o.id ? busy.status : (!sample ? "La lecture par Claude n'est pas disponible ici. Envoyez la fiche de fab à Claude dans la conversation." : '')));
-    if (c && c.fichiers && c.fichiers.length) box.append(h('p',{class:'files'}, 'Fiche contrôlée : ',
-      c.fichiers.map((f,i) => [i ? ', ' : '', h('a',{href:'/_blob/' + f.id, target:'_blank', rel:'noopener'}, f.nom)])));
     return box;
   }
 
@@ -758,11 +752,9 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
     const running = busy && busy.id === bid && !busy.done;
     const input = h('input',{type:'file', accept:'application/pdf,image/*', multiple:true, hidden:true,
       onchange: ev => { const f = [...ev.target.files]; ev.target.value = ''; if (f.length) addArcPages(o, f); }});
-    const files = o.arcFichiers || [];
     return h('div',{class:'action', 'data-noprint':''},
       h('h3',null, "Pages de l'ARC"),
-      files.length ? h('p',{class:'foot'}, 'ARC lu : ', files.map((f,i) => [i ? ', ' : '', h('a',{href:'/_blob/' + f.id, target:'_blank', rel:'noopener'}, f.nom)]),
-        o.arcPages ? ' (' + o.arcPages + ' page' + (o.arcPages > 1 ? 's' : '') + ').' : '.') : null,
+      o.arcPages ? h('p',{class:'foot'}, 'ARC lu : ' + o.arcPages + ' page' + (o.arcPages > 1 ? 's' : '') + '.') : null,
       h('p',{class:'foot'}, "Il manque des positions ? Joignez les pages manquantes : Claude les lit et ajoute leurs lignes au tableau."),
       input,
       h('div',{class:'row'},
