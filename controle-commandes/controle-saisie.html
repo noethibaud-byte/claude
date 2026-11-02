@@ -391,7 +391,9 @@ Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d
 
 RÈGLES DE L'ENTREPRISE :
 - Sur l'ARC, les cotes sont écrites H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de FABRICATION de l'ARC avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
-- Un jet d'eau est obligatoire sur toutes les menuiseries.
+- Un jet d'eau est obligatoire sur toutes les menuiseries qui ont un ouvrant. Sans ouvrant (châssis fixe), pas de jet d'eau : c'est normal.
+- PG16 (semblant de seuil alu) : le dormant est saisi 3 mm plus court. Ajoute ces 3 mm avant de comparer : la cote hors tout (dormant + 3) doit être égale à celle de l'ARC.
+- Fiches : sans indication précise sur l'ARC, une fenêtre OF reçoit des fiches ANUBA 14. Ne signale pas ANUBA 14 sur un OF quand l'ARC ne précise rien.
 - « Semaine de livraison : -1 » est voulu : ne le signale pas.
 - « - MONO » dans la configuration = dormant monobloc.
 - OB = oscillo-battant, OF = ouvrant à la française. GT/GCH = gauche tirant, DT/DTE = droite tirant, VP D = vantail principal à droite.
