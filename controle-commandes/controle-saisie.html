@@ -76,6 +76,10 @@ tr.verifier td:last-child{color:var(--amber);font-weight:700}
 tr.corrige td{font-weight:700}
 td.ck{text-align:center}
 .ok{columns:2 220px;margin:0;padding-left:18px;font-size:.85rem}
+.nc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.nc li{display:flex;gap:4px;align-items:baseline;flex-wrap:wrap}
+.nc li.done .t{text-decoration:line-through;color:var(--muted)}
+.nc-none{color:var(--green);font-weight:700}
 .entete{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 16px}
 .foot{font-size:.75rem;color:var(--muted)}
 .sign{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
@@ -246,13 +250,19 @@ td.part{min-width:160px}
     if (o.type !== 'controle') sheet.append(fabBox(o));
 
     if (c){
-      if (c.issues && c.issues.length){
-        sheet.append(h('h3',{class:'sec'},'À traiter'));
-        for (const is of c.issues) sheet.append(issueBox(o, e, is));
-      }
-      if (c.ok && c.ok.length){
-        sheet.append(h('h3',{class:'sec'},"Conforme à l'ARC"));
-        sheet.append(h('ul',{class:'ok'}, c.ok.map(t => h('li',null,t))));
+      // Résumé : uniquement ce qui n'est pas conforme, une ligne par point
+      const iss = c.issues || [];
+      sheet.append(h('h3',{class:'sec'},"Non conforme à l'ARC"));
+      if (!iss.length) sheet.append(h('p',{class:'nc-none'},"Rien à signaler : tout est conforme à l'ARC."));
+      else sheet.append(h('ul',{class:'nc'}, iss.map(is => {
+        const st = e.issues?.[is.id] || {};
+        const lvl = st.choix ? 'regle' : is.niveau;
+        return h('li',{class: st.choix ? 'done' : null}, h('span',{class:'lbl ' + lvl}, NIV[lvl]), h('span',{class:'t'}, is.titre),
+          st.choix ? h('span',{class:'foot'}, ' → ' + st.choix) : null);
+      })));
+      if (iss.length){
+        sheet.append(h('h3',{class:'sec'},'Détail des points'));
+        for (const is of iss) sheet.append(issueBox(o, e, is));
       }
       if (c.positions){
         sheet.append(h('h3',{class:'sec'},'Détail position par position'));
@@ -433,7 +443,6 @@ ${JSON.stringify(fab)}
 
 Réponds uniquement avec un objet JSON de cette forme (textes en français, courts et concrets) :
 {"issues":[{"niveau":"erreur","titre":"Position 8 (Me09 Escalier) : hauteur et largeur inversées","texte":"Ce qui ne va pas, en une ou deux phrases.","compare":[{"label":"ARC demande","val":"H 670 × L 710"},{"label":"Fiche de fab","val":"H 710 × L 670","bad":true}],"action":"Ce qu'il faut faire dans ARCHIMEDE.","choix":["Corrigé","Validé tel quel"]}],
-"ok":["Point conforme, court"],
 "positions":[{"pos":"8","ref":"Me09 Escalier","arc":"H 670 × L 710","fab":"H 710 × L 670","sensArc":"OF GT","sensFab":"OF GCH","statut":"ERREUR"}]}
 "niveau" vaut "erreur" (écart certain) ou "verifier" (doute, information manquante). "statut" vaut "OK", "À vérifier" ou "ERREUR". Une ligne "positions" par position de l'ARC. Si tout est conforme, "issues" est un tableau vide.`;
 
