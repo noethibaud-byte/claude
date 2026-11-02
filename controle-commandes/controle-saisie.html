@@ -371,8 +371,9 @@ td.ck{text-align:center}
   // ---- vérification : fiche de fab ----
   const EXTRACT = (a, b, n) => `Tu lis des fiches d'atelier (fiches de fabrication) imprimées par le logiciel de menuiserie ARCHIMEDE. Les ${n} images jointes sont les pages ${a} à ${b} du document (photos ou PDF).
 Chaque position occupe en général 2 pages : la première porte la configuration (Configuration, Pacloses, Seuil, Moulures, Vitrages et panneaux, Quincaillerie, Charnières, Couleur poignée, Hauteur poignée, Accessoires, VMC, rainures R003…), la seconde liste les pièces du dormant et des ouvrants avec « Dormant Ext (LrxHa) : L x H ». Le numéro de position est en haut à droite (« : _ 8 »), le sens (OB DTE, OF GCH…) aussi.
-Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d'objets. Omets un champ que tu ne vois pas sur ces pages ; ne devine rien et recopie les valeurs telles qu'écrites :
-[{"pos":"8","refClient":"Me09 - Escalier","quantite":2,"sens":"OF GCH","configuration":"RT 68 WINDOR 4 - MONO","seuil":"BOIS","dormantL":670,"dormantH":710,"ouvrants":[{"L":584,"H":624,"traverseInfLarg":85}],"vitrages":["4/20/4LowE Argon WE Noir 466 x 486"],"panneaux":[],"quincaillerie":"001 - STANDARD JEU 4","couleurPoignee":"F9 INOX","hauteurPoignee":200,"accessoires":["JET EAU FENETRE 18 X 25"],"vmc":false,"rainures":"R003 sur 4C (en reprise sur TB)","semaineLivraison":"-1","autres":"tout autre détail utile"}]`;
+Le tableau « Vitrages et panneaux » a les colonnes Composition, Alt. (altitude, ex. 2000), Larg., Haut., Ep. : lis bien la colonne Alt. sur chaque ligne et recopie-la dans "altitude" (vide seulement si la case est vraiment vide).
+Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d'objets. "pos" est le numéro seul (« 8 », jamais « 1073_8 »). Omets un champ que tu ne vois pas sur ces pages ; ne devine rien et recopie les valeurs telles qu'écrites :
+[{"pos":"8","refClient":"Me09 - Escalier","quantite":2,"sens":"OF GCH","configuration":"RT 68 WINDOR 4 - MONO","parcloses":"RT 68 - PARCLOSE EXTERIEURE","seuil":"BOIS","dormantL":670,"dormantH":710,"ouvrants":[{"L":584,"H":624,"traverseInfLarg":85}],"vitrages":[{"composition":"4/20/4LowE Argon WE Noir","altitude":"2000","L":466,"H":486}],"panneaux":[],"quincaillerie":"001 - STANDARD JEU 4","couleurPoignee":"F9 INOX","hauteurPoignee":200,"accessoires":["JET EAU FENETRE 18 X 25"],"vmc":false,"rainures":"R003 sur 4C (en reprise sur TB)","semaineLivraison":"-1","autres":"tout autre détail utile"}]`;
 
   const COMPARE = (o, fab) => `Tu contrôles la saisie d'une commande de menuiseries bois dans le logiciel ARCHIMEDE, avant son lancement en atelier. Compare l'ARC (ce que le client a commandé) avec les fiches de fabrication (ce qui a été saisi), position par position, et signale chaque écart.
 
@@ -383,6 +384,11 @@ RÈGLES DE L'ENTREPRISE :
 - « - MONO » dans la configuration = dormant monobloc.
 - OB = oscillo-battant, OF = ouvrant à la française. GT/GCH = gauche tirant, DT/DTE = droite tirant, VP D = vantail principal à droite.
 - Vérifie aussi : quantités, nombre de vantaux, seuil (alu RPT ou bois), pièces d'appui (PA), traverses basses de 135, hauteur d'allège, VMC (oui/non), quincaillerie et fiches spécifiées, couleur des poignées, vitrage, altitude, rainures, notes manuscrites de l'ARC.
+- VITRAGES : on parle comme les vitriers. Sur l'ARC, la composition est donnée vue de l'extérieur (ex. 4LowE/20/4). Sur la fiche de fab, la composition est écrite en partant du côté des parcloses (« Pacloses : … EXTERIEURE » ou « … INTERIEURE »). Avec une parclose INTÉRIEURE, la composition de la fiche se lit à l'envers : « 4/20/4LowE » sur la fiche = « 4LowE/20/4 » sur l'ARC, et c'est CONFORME. Ne signale une inversion que si, une fois le côté parclose pris en compte, la face LowE n'est toujours pas la même.
+- L'altitude des vitrages se lit dans la colonne « Alt. » de la fiche.
+- Pas de rubrique VMC sur une fiche = pas de VMC.
+- Dormant « 68 × 80 » sur l'ARC = pièces de dormant de 79 × 68 sur la fiche : c'est normal.
+- Ne crée pas de point pour une information que la fiche de fab n'affiche jamais (pose, cochonnet, modèle de poignée, notes de livraison, verrou de semi-fixe, crémone, hauteur d'allège) : elle se contrôle à la saisie, pas sur la fiche.
 - Les positions de l'ARC et d'ARCHIMEDE peuvent être numérotées différemment : rapproche-les par la référence client (Me01…), le type et les cotes.
 - Une information absente des fiches (page manquante) est « à vérifier », pas une erreur.
 
@@ -443,7 +449,11 @@ Réponds uniquement avec un objet JSON de cette forme (textes en français, cour
       }
       // Une position peut s'étaler sur deux paquets de pages : on fusionne par numéro
       const byPos = {};
-      for (const p of fab){ const k = S(p.pos) || ('?' + Object.keys(byPos).length); byPos[k] = Object.assign(byPos[k] || {}, p); }
+      for (const p of fab){
+        const m = S(p.pos).match(/(\d+)\s*$/);
+        const k = m ? String(Number(m[1])) : ('?' + Object.keys(byPos).length);
+        byPos[k] = Object.assign(byPos[k] || {}, p, {pos: m ? k : p.pos});
+      }
       const merged = Object.values(byPos);
       say('Claude compare avec l\'ARC…');
       const rep = await sample.json(COMPARE(o, merged), {signal: ctl.signal, modelTier:'complex', cache:false});
