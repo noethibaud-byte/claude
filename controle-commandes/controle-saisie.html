@@ -412,7 +412,7 @@ td.part{min-width:160px}
 
   // ---- vérification : fiche de fab ----
   const EXTRACT = (a, b, n) => `Tu lis des fiches d'atelier (fiches de fabrication) imprimées par le logiciel de menuiserie ARCHIMEDE. Les ${n} images jointes sont les pages ${a} à ${b} du document (photos ou PDF).
-Chaque position occupe en général 2 pages : la première porte la configuration (Configuration, Pacloses, Seuil, Moulures, Vitrages et panneaux, Quincaillerie, Charnières, Couleur poignée, Hauteur poignée, Accessoires, VMC, rainures R003…), la seconde liste les pièces du dormant et des ouvrants avec « Dormant Ext (LrxHa) : L x H ». Le numéro de position est en haut à droite (« : _ 8 »), le sens (OB DTE, OF GCH…) aussi.
+Chaque menuiserie occupe TOUJOURS 2 pages, un recto et un verso : la première porte la configuration (Configuration, Pacloses, Seuil, Moulures, Vitrages et panneaux, Quincaillerie, Charnières, Couleur poignée, Hauteur poignée, Accessoires, VMC, rainures R003…), la seconde liste les pièces du dormant et des ouvrants avec « Dormant Ext (LrxHa) : L x H ». Le numéro de position est en haut à droite (« : _ 8 »), le sens (OB DTE, OF GCH…) aussi.
 Le tableau « Vitrages et panneaux » a les colonnes Composition, Alt. (altitude, ex. 2000), Larg., Haut., Ep. : lis bien la colonne Alt. sur chaque ligne et recopie-la dans "altitude" (vide seulement si la case est vraiment vide).
 Pour chaque position visible sur CES pages, renvoie uniquement un tableau JSON d'objets. "pos" est le numéro seul (« 8 », jamais « 1073_8 »). Omets un champ que tu ne vois pas sur ces pages ; ne devine rien et recopie les valeurs telles qu'écrites :
 [{"pos":"8","refClient":"Me09 - Escalier","quantite":2,"sens":"OF GCH","configuration":"RT 68 WINDOR 4 - MONO","parcloses":"RT 68 - PARCLOSE EXTERIEURE","seuil":"BOIS","dormantL":670,"dormantH":710,"ouvrants":[{"L":584,"H":624,"traverseInfLarg":85}],"vitrages":[{"composition":"4/20/4LowE Argon WE Noir","altitude":"2000","L":466,"H":486}],"panneaux":[],"quincaillerie":"001 - STANDARD JEU 4","couleurPoignee":"F9 INOX","hauteurPoignee":200,"accessoires":["JET EAU FENETRE 18 X 25"],"vmc":false,"rainures":"R003 sur 4C (en reprise sur TB)","semaineLivraison":"-1","autres":"tout autre détail utile"}]`;
@@ -423,15 +423,18 @@ RÈGLES DE L'ENTREPRISE :
 - Dans la fiche de saisie ci-dessous, les cotes de l'ARC sont toujours notées H × L (hauteur d'abord). Sur la fiche de fab, « Dormant Ext (LrxHa) » donne L × H (largeur d'abord). Compare la cote de fabrication attendue avec le dormant extérieur de la fiche. Une hauteur et une largeur inversées sont une ERREUR.
 - Cote de fabrication attendue : si l'ARC donne une cote de fabrication imprimée, prends-la. Sinon, calcule-la à partir de la cote TABLEAU, en pose en applique : recouvrement = largeur du dormant (80) − cochonnet (indiqué dans l'en-tête, ex. 20 → 60). Largeur fab = largeur tableau + 2 × recouvrement. Hauteur fab = hauteur tableau + 1 × recouvrement, + 10 s'il y a une pièce d'appui (PA). Exemple, cochonnet 20 avec PA : tableau H 940 × L 1400 → fab H 1010 × L 1520. Une cote manuscrite « (manuscrit) » sert seulement de repère.
 - Les coulissants ne sont pas sur les fiches de fab : c'est normal, ignore-les.
-- Essence : la gamme de l'ARC donne l'essence (« PIN SYLVESTRE » = « Pin DKD » sur la fiche ; mélèze, chêne… doivent apparaître tels quels). Compare-la avec « Essence » sur chaque fiche : une essence différente est une ERREUR.
+- Essence : la gamme de l'ARC donne l'essence (« PIN SYLVESTRE » = « Pin DKD » sur la fiche ; « Mélèze naturel » = « Mélèze Nat » ; les autres essences doivent apparaître telles quelles). Compare-la avec « Essence » sur chaque fiche : une essence différente est une ERREUR.
 - Une ligne de l'ARC suivie de lignes à 0,00 qui la détaillent (« composé de … ») n'a pas de fiche propre : ce sont les lignes de détail qui ont des fiches. Ce n'est pas une position manquante.
 - Quand la numérotation des fiches de fab diffère de celle de l'ARC, écris les deux dans chaque titre, ex. « Position 2 de l'ARC (fiche de fab 1071_5, Repère 4) ».
 - Fiches de porte : « TRIXACTA » dans Charnières = 3 fiches par ouvrant ; « TRIXACTA RENFORCÉE » = 4 par ouvrant.
+- Chaque menuiserie a toujours 2 feuilles (recto : configuration ; verso : dimensions et liste des pièces). Ne dis jamais qu'une 2e feuille manque.
+- Les articles « en fourniture » (ferme-porte, etc.) ne sont pas sur les fiches de fab : ils se contrôlent sur la feuille d'accessoires à la livraison.
 - Dormants ou montants élargis : ils se lisent sur la 2e feuille de la position, dans la colonne Larg. de la liste des pièces (ex. MONTANT GAUCHE … 100 … = montant élargi à 100).
 - Les options de porte figurent sous la quincaillerie ou dans les accessoires (PE à lames, lames horizontales, crémone pompier, serrure antipanique, doigt anti-dégondage) : cherche-les là avant de les dire absentes.
 - Petits bois : compte les verticaux et horizontaux sur le dessin et dans la nomenclature (MONTANT PETIT-B, TRAVERSE PETIT-B). n verticaux et m horizontaux donnent (n+1) × (m+1) champs.
 - Une position présente sur les fiches mais absente de l'ARC fourni est « à vérifier » (l'ARC a peut-être une autre page), pas une erreur.
-- Un jet d'eau est obligatoire sur toutes les menuiseries qui ont un ouvrant. Sans ouvrant (châssis fixe), pas de jet d'eau : c'est normal.
+- Pas de jet d'eau sur une ouverture extérieure (« Ouv EXT » dans la configuration) : c'est normal.
+- Un jet d'eau est obligatoire sur toutes les menuiseries qui ont un ouvrant (ouverture intérieure). Sans ouvrant (châssis fixe), pas de jet d'eau : c'est normal.
 - PG16 (semblant de seuil alu) : le dormant est saisi 3 mm plus court. Ajoute ces 3 mm avant de comparer : la cote hors tout (dormant + 3) doit être égale à celle de l'ARC.
 - Parcloses : un châssis fixe et une porte d'entrée ont TOUJOURS des parcloses INTÉRIEURES, sauf si l'ARC précise autre chose pour cette position. Pour les autres menuiseries en jeu de 4, sans précision sur l'ARC, ce sont des parcloses EXTÉRIEURES. Compare avec « Pacloses » sur la fiche de chaque position ; un écart avec cette règle est une ERREUR.
 - Jeu : sans précision sur l'ARC, c'est du jeu de 4. La configuration de la fiche donne le jeu saisi (« WINDOR 4 » = jeu de 4, « WINDOR 12 » = jeu de 12) : un jeu différent de l'ARC est une ERREUR.
@@ -448,6 +451,7 @@ RÈGLES DE L'ENTREPRISE :
 - Pas de rubrique VMC sur une fiche = pas de VMC.
 - Dormant « 68 × 80 » sur l'ARC = pièces de dormant de 79 × 68 sur la fiche : c'est normal.
 - Ne crée pas de point pour une information que la fiche de fab n'affiche jamais (pose, cochonnet, modèle de poignée, notes de livraison, verrou de semi-fixe, crémone, hauteur d'allège) : elle se contrôle à la saisie, pas sur la fiche.
+- Les fiches de fab sont numérotées dans l'ordre de saisie dans ARCHIMEDE (…_1 = première menuiserie saisie), pas dans l'ordre de l'ARC. Ne suppose jamais que la ligne N de l'ARC est la fiche N.
 - Les positions de l'ARC et d'ARCHIMEDE peuvent être numérotées différemment : rapproche-les par la référence client (Me01…), le type et les cotes.
 - Une information absente des fiches (page manquante) est « à vérifier », pas une erreur.
 
