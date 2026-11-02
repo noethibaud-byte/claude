@@ -425,7 +425,8 @@ RÈGLES DE L'ENTREPRISE :
 - Les coulissants ne sont pas sur les fiches de fab : c'est normal, ignore-les.
 - Essence : la gamme de l'ARC donne l'essence (« PIN SYLVESTRE » = « Pin DKD » sur la fiche ; « Mélèze naturel » = « Mélèze Nat » ; les autres essences doivent apparaître telles quelles). Compare-la avec « Essence » sur chaque fiche : une essence différente est une ERREUR.
 - Une ligne de l'ARC suivie de lignes à 0,00 qui la détaillent (« composé de … ») n'a pas de fiche propre : ce sont les lignes de détail qui ont des fiches. Ce n'est pas une position manquante.
-- Quand la numérotation des fiches de fab diffère de celle de l'ARC, écris les deux dans chaque titre, ex. « Position 2 de l'ARC (fiche de fab 1071_5, Repère 4) ».
+- VOCABULAIRE, à respecter dans tous les textes : « Repère N » = la ligne N de l'ARC (sur la fiche de fab, « Réf. client : Repère N » renvoie à ce même repère). « fiche 1071_X » = la fiche de fab numéro X (ordre de saisie). N'écris jamais « position ». Chaque titre commence par le repère, sa désignation courte, puis la ou les fiches entre parenthèses, ex. « Repère 2, porte 2 vantaux (fiche 1071_3) : … ».
+- Un repère de l'ARC peut être un ensemble composé de plusieurs menuiseries (au moins 2) : il a alors plusieurs fiches (« Repère 1 Gauche », « Repère 1 Droit »…), ex. « Repère 1, ensemble composé (fiches 1071_1 + 1071_2) ». Compare l'ensemble à la ligne de l'ARC (largeurs additionnées).
 - Fiches de porte : « TRIXACTA » dans Charnières = 3 fiches par ouvrant ; « TRIXACTA RENFORCÉE » = 4 par ouvrant.
 - Chaque menuiserie a toujours 2 feuilles (recto : configuration ; verso : dimensions et liste des pièces). Ne dis jamais qu'une 2e feuille manque.
 - Les articles « en fourniture » (ferme-porte, etc.) ne sont pas sur les fiches de fab : ils se contrôlent sur la feuille d'accessoires à la livraison.
@@ -462,8 +463,8 @@ FICHES DE FABRICATION (extraites) :
 ${JSON.stringify(fab)}
 
 Réponds uniquement avec un objet JSON de cette forme (textes en français, courts et concrets) :
-{"issues":[{"niveau":"erreur","titre":"Position 8 (Me09 Escalier) : hauteur et largeur inversées","texte":"Ce qui ne va pas, en une ou deux phrases.","compare":[{"label":"ARC demande","val":"H 670 × L 710"},{"label":"Fiche de fab","val":"H 710 × L 670","bad":true}],"action":"Ce qu'il faut faire dans ARCHIMEDE.","choix":["Corrigé","Validé tel quel"]}],
-"positions":[{"pos":"8","ref":"Me09 Escalier","arc":"H 670 × L 710","fab":"H 710 × L 670","sensArc":"OF GT","sensFab":"OF GCH","statut":"ERREUR"}]}
+{"issues":[{"niveau":"erreur","titre":"Repère 8, fenêtre escalier (fiche 1034_8) : hauteur et largeur inversées","texte":"Ce qui ne va pas, en une ou deux phrases.","compare":[{"label":"ARC demande","val":"H 670 × L 710"},{"label":"Fiche de fab","val":"H 710 × L 670","bad":true}],"action":"Ce qu'il faut faire dans ARCHIMEDE.","choix":["Corrigé","Validé tel quel"]}],
+"positions":[{"pos":"8","ref":"Fenêtre escalier Me09","fiches":"1034_8","arc":"H 670 × L 710","fab":"H 710 × L 670","sensArc":"OF GT","sensFab":"OF GCH","statut":"ERREUR"}]}
 "niveau" vaut "erreur" (écart certain) ou "verifier" (doute, information manquante). "statut" vaut "OK", "À vérifier" ou "ERREUR". Une ligne "positions" par position de l'ARC. Si tout est conforme, "issues" est un tableau vide.`;
 
   function cleanReport(r, run){
@@ -480,13 +481,13 @@ Réponds uniquement avec un objet JSON de cette forme (textes en français, cour
     const pos = arr(r && r.positions);
     const rows = pos.map(p => {
       const s = S(p && p.statut); const cls = s in st ? st[s] : 'verifier';
-      const cells = [p.pos, p.ref, p.arc, p.fab, p.sensArc, p.sensFab, s || 'À vérifier'].map(S);
+      const cells = [p.pos, p.ref, p.fiches, p.arc, p.fab, p.sensArc, p.sensFab, s || 'À vérifier'].map(S);
       return cls ? {cells, statut:cls} : cells;
     });
     return {
       issues, ok: arr(r && r.ok).map(S).filter(Boolean),
       posOk: pos.filter(p => S(p && p.statut) === 'OK').length,
-      positions: {head:['Pos','Réf.','ARC H × L','Fab H × L','Sens ARC','Sens fab','Statut'], mono:[2,3], rows}
+      positions: {head:['Repère ARC','Désignation','Fiche(s) de fab','ARC H × L','Fab H × L','Sens ARC','Sens fab','Statut'], mono:[3,4], rows}
     };
   }
 
