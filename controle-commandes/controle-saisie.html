@@ -387,11 +387,26 @@ td.part{min-width:160px}
     }
     return window.pdfjsLib;
   }
+  // Texte d'une page de PDF, ligne par ligne (les fiches ARCHIMEDE sont des PDF avec du vrai texte)
+  async function pageText(page){
+    const tc = await page.getTextContent();
+    const lines = [];
+    for (const it of tc.items){
+      if (!it.str || !it.str.trim()) continue;
+      const y = it.transform[5], x = it.transform[4];
+      let l = lines.find(l => Math.abs(l.y - y) < 3);
+      if (!l){ l = {y, items:[]}; lines.push(l); }
+      l.items.push({x, s: it.str});
+    }
+    return lines.sort((a,b) => b.y - a.y)
+      .map(l => l.items.sort((a,b) => a.x - b.x).map(i => i.s.trim()).join('   ')).join('\n');
+  }
   async function filesToImages(files, progress){
     const out = [];
+    out.texts = [];
     for (const f of files){
       const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
-      if (!isPdf){ out.push(f); continue; }
+      if (!isPdf){ out.push(f); out.texts.push(''); continue; }
       const lib = await pdfjs();
       const doc = await lib.getDocument({data: new Uint8Array(await f.arrayBuffer())}).promise;
       for (let i = 1; i <= doc.numPages; i++){
@@ -403,6 +418,7 @@ td.part{min-width:160px}
         const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
         await page.render({canvasContext: cx, viewport: vp}).promise;
         out.push(await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.88)));
+        out.texts.push(await pageText(page).catch(() => ''));
       }
     }
     return out;
@@ -557,7 +573,9 @@ Un point peut porter un champ optionnel \"table\":{\"head\":[…],\"rows\":[[…
         const chunk = imgs.slice(i, i + per);
         const a = i + 1, b = i + chunk.length;
         say('Claude lit les pages ' + a + ' à ' + b + ' sur ' + imgs.length + '…');
-        const part = await sample.json(EXTRACT(a, b, chunk.length), {images: chunk, signal: ctl.signal});
+        const txt = imgs.texts.slice(i, i + per);
+        const withText = txt.some(t => t.trim().length > 40) ? '\n\nTEXTE EXACT des pages (extrait du PDF). Il FAIT FOI pour toutes les valeurs écrites (sens « OF DTE » en haut de page, Couleur INT, Traitement, cotes, pièces, notes) : quand l\'image et ce texte diffèrent, recopie le texte. Les valeurs sont sur la même ligne que leur libellé. Le point sépare les milliers (1.030 = 1030 mm).\n' + txt.map((t, k) => '--- page ' + (a + k) + ' ---\n' + (t || '(pas de texte : lis l\'image)')).join('\n') : '';
+        const part = await sample.json(EXTRACT(a, b, chunk.length) + withText, {images: chunk, signal: ctl.signal});
         if (Array.isArray(part)) fab.push(...part.filter(x => x && typeof x === 'object'));
       }
       // Une position peut s'étaler sur deux paquets de pages : on fusionne par numéro
