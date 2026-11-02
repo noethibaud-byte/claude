@@ -683,10 +683,10 @@ Règles pour les cotes : lis l'en-tête de chaque colonne de cotes pour savoir c
       return;
     }
     db.collection('commandes').onSnapshot(snap => {
-      // Tri par numéro de commande croissant (1070 avant 1071) ; sans numéro, à la fin
-      const n = o => { const m = S(o.num || o.titreCourt).match(/\d+/); return m ? Number(m[0]) : Infinity; };
+      // Tri par numéro de commande décroissant (1071 avant 1070) ; sans numéro, à la fin
+      const n = o => { const m = S(o.num || o.titreCourt).match(/\d+/); return m ? Number(m[0]) : -Infinity; };
       orders = snap.docs.map(d => Object.assign({id:d.id}, d.data()))
-        .sort((a,b) => (n(a) - n(b)) || ((a.ordre||0) - (b.ordre||0)));
+        .sort((a,b) => (n(b) - n(a)) || ((b.ordre||0) - (a.ordre||0)));
       const active = document.activeElement;
       if (active && active.tagName === 'INPUT' && active.type === 'text'){ renderList(); return; }
       route();
