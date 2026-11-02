@@ -424,6 +424,22 @@ td.part{min-width:160px}
     }
     return out;
   }
+  // Aucune donnée client n'est enregistrée : on retire les champs client et les coordonnées avant chaque écriture
+  const CLIENT_KEYS = /^(client|projet|chantier|adresse|email|mail|telephone|tel|prix|total)$/i;
+  function scrub(x){
+    if (typeof x === 'string') return x
+      .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '')
+      .replace(/(\+33\s?|0)[1-9](?:[\s.-]?\d{2}){4}/g, '')
+      .replace(/\s*(Prix( HT)?\s*(\/\s*)?(unit[ée]|unitaire)?|Total( HT)?)\s*:?\s*\d[\d\s]*(,\d{2})?\s*€?\.?/gi, '')
+      .replace(/(^|\s)(Client|Réf\.?)\s*:\s*[^;,.·]*/g, '$1').trim();
+    if (Array.isArray(x)) return x.map(scrub);
+    if (x && typeof x === 'object'){
+      const out = {};
+      for (const [k, v] of Object.entries(x)) if (!CLIENT_KEYS.test(k)) out[k] = scrub(v);
+      return out;
+    }
+    return x;
+  }
   // Les ARC et fiches de fab portent le nom du client : on ne les conserve pas, on garde seulement le résultat de la lecture
   async function keepFiles(files){
     return [];
@@ -592,7 +608,7 @@ Un point peut porter un champ optionnel \"table\":{\"head\":[…],\"rows\":[[…
       });
       const docBody = JSON.parse(JSON.stringify(Object.assign({}, o)));
       delete docBody.id; docBody.verif = verif;
-      await db.doc('commandes/' + o.id).set(docBody);
+      await db.doc('commandes/' + o.id).set(scrub(docBody));
       busy = null; $('#saved').textContent = 'Vérification enregistrée.';
     } catch (e){
       const msg = e && e.code ? sampleMsg(e) : (e && e.message === 'script' ? "Le lecteur de PDF n'a pas pu se charger. Prenez plutôt les pages en photo." : "La vérification a échoué : " + (e && e.message || 'erreur inconnue') + '.');
@@ -737,7 +753,7 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
         arcFichiers: fichiers, arcDetails,
         signatures:['Saisie le','Vérifiée par','Commande éditée le']
       };
-      await db.doc('commandes/' + id).set(doc);
+      await db.doc('commandes/' + id).set(scrub(doc));
       busy = null; newFiles = [];
       location.hash = 'c-' + id;
     } catch (e){
@@ -791,7 +807,7 @@ Si un numéro de fiche est écrit à la main en marge de la ligne (ex. « 1034.1
       docBody.arcFichiers = [...(docBody.arcFichiers || []), ...kept];
       docBody.arcPages = (docBody.arcPages || (docBody.arcFichiers.length - kept.length) || 0) + imgs.length;
       if (docBody.meta) docBody.meta = /\d+ positions?/.test(docBody.meta) ? docBody.meta.replace(/\d+ positions?/, pos.rows.length + ' positions') : docBody.meta + ' · ' + pos.rows.length + ' positions';
-      await db.doc('commandes/' + o.id).set(docBody);
+      await db.doc('commandes/' + o.id).set(scrub(docBody));
       busy = {id:bid, status: keep.length ? keep.length + ' position' + (keep.length > 1 ? 's ajoutées' : ' ajoutée') + ' au tableau.' + (o.verif ? ' Relancez la vérification avec la fiche de fab.' : '') : 'Aucune nouvelle position sur ces pages.', err:false, done:true};
     } catch (e){
       busy = {id:bid, status: arcErr(e), err:true, done:true};
