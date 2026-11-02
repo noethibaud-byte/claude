@@ -103,6 +103,10 @@ td.ck{text-align:center}
 .field{display:flex;flex-direction:column;gap:3px;font-size:.85rem}
 .field input[type=text]{border:1.5px solid var(--cell);border-radius:4px;padding:7px 9px;background:var(--paper)}
 .picked{font-size:.8rem;color:var(--muted)}
+.del{margin-top:22px;padding-top:12px;border-top:1px dashed var(--cell);display:flex;flex-direction:column;gap:8px}
+.del.confirm{border:2px solid var(--red);border-radius:6px;padding:12px 14px;background:var(--red-bg)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.danger-fill{background:var(--red);color:#fff}
 @media (max-width:520px){.sheet{padding:16px 14px 20px}}
 
 /* Copie hors écran qui sert à fabriquer le PDF : toujours en clair, largeur A4 */
@@ -156,6 +160,7 @@ td.part{min-width:160px}
   let db = null, sample = null, assets = null, downloads = null;
   let orders = [], etats = {}, current = null;
   let busy = null; // {id, ctl, status, err}
+  let confirmDel = null; // id de la commande dont on demande la suppression
   const NIV = {erreur:'ERREUR', verifier:'À VÉRIFIER', regle:'RÉGLÉ'};
 
   // Partie « contrôle » d'une commande : résultat de la vérification, ou la commande elle-même (ancien format)
@@ -292,6 +297,7 @@ td.part{min-width:160px}
     sheet.append(h('div',{class:'sign'}, sig.map((lab,i) => h('label',null, lab,
       h('input',{type:'text', id:'sig-' + o.id + '-' + i, value: e.signatures?.[keys[i]] || '',
         onchange: ev => save(o.id,{signatures:{[keys[i]]:ev.target.value}})})))));
+    sheet.append(deleteBox(o));
     main.replaceChildren(sheet);
   }
 
@@ -604,6 +610,40 @@ Règles pour les cotes : lis l'en-tête de chaque colonne de cotes pour savoir c
     } catch (e){
       busy = {id:'nouvelle', status: e && e.code === 'image_rejected' ? "L'ARC a trop de pages : gardez seulement les pages utiles." : sampleMsg(e), err:true, done:true};
       renderSheet();
+    }
+  }
+
+  // ---- suppression d'une commande (confirmation dans la page) ----
+  function deleteBox(o){
+    const label = o.titreCourt || ('Commande ' + o.num);
+    if (confirmDel !== o.id){
+      return h('div',{class:'del', 'data-noprint':''},
+        h('button',{class:'btn ghost danger', type:'button', onclick:() => { confirmDel = o.id; renderSheet(); }}, 'Supprimer la commande'));
+    }
+    return h('div',{class:'del confirm', 'data-noprint':''},
+      h('p',null, h('b',null, 'Supprimer « ' + label + ' » ?'), ' La fiche de saisie, la vérification, vos coches et les fichiers joints seront effacés. Impossible de revenir en arrière.'),
+      h('div',{class:'row'},
+        h('button',{class:'btn danger-fill', type:'button', onclick: ev => deleteOrder(o, ev.currentTarget)}, 'Oui, supprimer'),
+        h('button',{class:'btn ghost', type:'button', onclick:() => { confirmDel = null; renderSheet(); }}, 'Annuler')));
+  }
+  async function deleteOrder(o, btn){
+    btn.disabled = true; btn.textContent = 'Suppression…';
+    try {
+      await db.doc('commandes/' + o.id).delete();
+      await db.doc('etats/' + o.id).delete().catch(() => {});
+      if (assets){
+        const ids = [...(o.arcFichiers || []), ...((o.verif && o.verif.fichiers) || [])].map(f => f && f.id).filter(Boolean);
+        for (const id of ids){ try { await assets.delete(id); } catch (_) { /* fichier déjà absent */ } }
+      }
+      confirmDel = null;
+      $('#saved').textContent = '« ' + (o.titreCourt || o.id) + ' » supprimée.';
+      location.hash = '';
+      route();
+    } catch (e){
+      btn.disabled = false; btn.textContent = 'Oui, supprimer';
+      $('#saved').textContent = e && e.code === 'invalid_argument'
+        ? "Vous n'avez pas le droit de supprimer cette commande."
+        : 'La suppression a échoué. Réessayez dans un instant.';
     }
   }
 
